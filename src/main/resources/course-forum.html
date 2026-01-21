@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Discussion Forum</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="/lecturer/dashboard">School Portal</a>
+            <a href="/lecturer/dashboard" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Forum: <span th:text="${course.courseCode}">CODE</span></h3>
+            <span class="text-muted" th:text="${course.name}">Course Name</span>
+        </div>
+
+        <!-- Post Form -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <form th:action="@{/lecturer/course/{id}/forum(id=${course.id})}" method="post">
+                    <div class="mb-3">
+                        <textarea class="form-control" name="content" rows="3" placeholder="Post an announcement or reply..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Post Message</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Messages List -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Recent Discussions</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <div th:each="post : ${posts}" class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 fw-bold" th:text="${post.author.fullName}">Author</h6>
+                        <small class="text-muted" th:text="${#temporals.format(post.timestamp, 'dd-MM-yyyy HH:mm')}">Date</small>
+                    </div>
+                    <p class="mb-1" th:text="${post.content}">Message content...</p>
+                    <small class="text-muted" th:if="${post.author.role.name() == 'LECTURER'}">
+                        <span class="badge bg-success">Lecturer</span>
+                    </small>
+                </div>
+                <div th:if="${#lists.isEmpty(posts)}" class="list-group-item text-center text-muted py-4">
+                    No discussions yet.
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

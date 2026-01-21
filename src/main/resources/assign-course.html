@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Assign Course to Lecturer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Assign Course to Lecturer</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Alert Messages -->
+                    <div th:if="${param.success}" class="alert alert-success">
+                        Course assigned successfully!
+                    </div>
+                    <div th:if="${param.error}" class="alert alert-danger">
+                        Error: <span th:text="${param.error}"></span>
+                    </div>
+
+                    <form action="/admin/assign-course" method="post">
+                        <div class="mb-3">
+                            <label for="course" class="form-label">Select Course</label>
+                            <select name="courseId" id="course" class="form-select" required>
+                                <option value="" disabled selected>Choose a course...</option>
+                                <option th:each="course : ${courses}" 
+                                        th:value="${course.id}" 
+                                        th:text="${course.name} + ' (' + ${course.courseCode} + ')'">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="lecturer" class="form-label">Select Lecturer</label>
+                            <select name="lecturerId" id="lecturer" class="form-select" required>
+                                <option value="" disabled selected>Choose a lecturer...</option>
+                                <option th:each="lecturer : ${lecturers}" 
+                                        th:value="${lecturer.id}" 
+                                        th:text="${lecturer.fullName} + ' (' + ${lecturer.staffId != null ? lecturer.staffId : lecturer.username} + ')'">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Assign Course</button>
+                            <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Course Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/dashboard">School Admin</a>
+            <a href="/admin/dashboard" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0" th:text="${course.name}">Course Name</h3>
+                <span th:text="${course.courseCode}">CODE</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Department:</strong> <span th:text="${course.department.name}">Dept</span></p>
+                        <p><strong>Credit Units:</strong> <span th:text="${course.creditUnits}">3</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Assigned Lecturer:</strong> 
+                            <span th:if="${course.lecturer != null}" th:text="${course.lecturer.fullName}">Name</span>
+                            <span th:if="${course.lecturer == null}" class="text-muted">Not Assigned</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">Enrolled Students</h4>
+                    <small class="text-muted">Students in <span th:text="${course.department.name}">Dept</span></small>
+                </div>
+                <a th:href="@{/admin/course/{id}/export(id=${course.id})}" class="btn btn-success btn-sm">Export CSV</a>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Matric Number</th>
+                            <th>Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="student : ${students}">
+                            <td th:text="${student.fullName}">Student Name</td>
+                            <td th:text="${student.matricNumber}">Matric</td>
+                            <td th:text="${student.level}">100</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(students)}">
+                            <td colspan="3" class="text-center">No students found in this department.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

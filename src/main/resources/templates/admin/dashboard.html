@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+        <div class="container">
+            <a class="navbar-brand" href="#">School Portal (Admin)</a>
+            <div class="d-flex align-items-center text-white">
+                <span class="me-3">Welcome, <span th:text="${username}" class="fw-bold">Admin</span></span>
+                <a href="/admin/profile" class="btn btn-outline-light btn-sm me-2">Profile</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Admin Dashboard</h2>
+
+        <!-- User Management Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>User Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <a href="?role=STUDENT" class="btn btn-outline-primary me-2">View Students</a>
+                    <a href="?role=LECTURER" class="btn btn-outline-success me-2">View Lecturers</a>
+                    <a href="?role=ADMIN" class="btn btn-outline-danger me-2">View Admins</a>
+                    <a href="/admin/dashboard" class="btn btn-outline-secondary">View All</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${users.content}">
+                                <td th:text="${user.id}">1</td>
+                                <td th:text="${user.username}">username</td>
+                                <td th:text="${user.fullName}">Full Name</td>
+                                <td th:text="${user.email}">email@example.com</td>
+                                <td th:text="${user.role}">ROLE</td>
+                                <td>
+                                    <a th:href="@{/admin/user/delete/{id}(id=${user.id})}" class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav th:if="${users.totalPages > 1}" aria-label="User pagination">
+                    <ul class="pagination">
+                        <li class="page-item" th:classappend="${users.first} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/dashboard(page=${users.number - 1}, size=${users.size})}">Previous</a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, users.totalPages - 1)}"
+                            th:classappend="${i == users.number} ? 'active'">
+                            <a class="page-link" th:href="@{/admin/dashboard(page=${i}, size=${users.size})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${users.last} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/dashboard(page=${users.number + 1}, size=${users.size})}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Department Management Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Department Management</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/admin/department/create}" method="post" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="name" placeholder="Department Name" required>
+                        <button class="btn btn-success" type="submit">Add Department</button>
+                    </div>
+                </form>
+
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center" th:each="dept : ${departments}">
+                        <span th:text="${dept.name}">Department Name</span>
+                        <span class="badge bg-primary rounded-pill" th:text="${dept.id}">ID</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Course Management Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Course Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Credits</th>
+                                <th>Department</th>
+                                <th>Lecturer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="course : ${courses}">
+                                <td th:text="${course.courseCode}">CSC101</td>
+                                <td th:text="${course.name}">Course Name</td>
+                                <td th:text="${course.creditUnits}">3</td>
+                                <td th:text="${course.department.name}">Department</td>
+                                <td th:text="${course.lecturer != null ? course.lecturer.fullName : 'Not Assigned'}">Lecturer</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignment Overview Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Assignment Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Created By</th>
+                                <th>Department</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="assignment : ${assignments}">
+                                <td th:text="${assignment.title}">Assignment Title</td>
+                                <td th:text="${assignment.description}">Description</td>
+                                <td th:text="${assignment.createdBy.fullName}">Creator</td>
+                                <td th:text="${assignment.department.name}">Department</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

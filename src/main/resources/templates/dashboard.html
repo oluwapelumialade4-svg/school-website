@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Lecturer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="#">School Portal (Lecturer)</a>
+            <div class="d-flex align-items-center text-white">
+                <span class="me-3">Welcome, <span th:text="${username}" class="fw-bold">Lecturer</span></span>
+                <a href="/lecturer/profile" class="btn btn-outline-light btn-sm me-2">Profile</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Manage Assignments</h2>
+            <a href="/lecturer/assignment/create" class="btn btn-primary">Create New Assignment</a>
+        </div>
+
+        <div th:if="${param.created}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Assignment created successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- My Courses Section -->
+        <div class="card mb-4">
+            <div class="card-header">My Courses</div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a th:each="course : ${courses}" 
+                       th:href="@{/lecturer/course/{id}/materials(id=${course.id})}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <span th:text="${course.courseCode} + ' - ' + ${course.name}" class="fw-bold">CSC101</span>
+                        </div>
+                        <div>
+                            <span class="badge bg-primary rounded-pill me-1">Materials</span>
+                            <object><a th:href="@{/lecturer/course/{id}/schedule(id=${course.id})}" class="badge bg-secondary rounded-pill text-decoration-none">Schedule</a></object>
+                            <object><a th:href="@{/lecturer/course/{id}/forum(id=${course.id})}" class="badge bg-warning text-dark rounded-pill text-decoration-none ms-1">Forum</a></object>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 mb-3" th:each="assignment : ${assignments}">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${assignment.title}">Assignment Title</h5>
+                        <p class="card-text text-truncate" th:text="${assignment.description}">Description...</p>
+                        <p class="card-text"><small class="text-muted">Due: <span th:text="${assignment.dueDate}">Date</span></small></p>
+                        <a th:href="@{/lecturer/assignment/{id}/submissions(id=${assignment.id})}" class="btn btn-outline-success">View Submissions</a>
+                        <a th:href="@{/lecturer/assignment/delete/{id}(id=${assignment.id})}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this assignment?')">Delete</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12" th:if="${#lists.isEmpty(assignments)}">
+                <div class="alert alert-info">No assignments found.</div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

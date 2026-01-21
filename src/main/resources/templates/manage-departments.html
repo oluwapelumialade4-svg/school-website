@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Manage Departments</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/dashboard">School Admin</a>
+            <a href="/admin/dashboard" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Add / Edit Department</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/admin/department/save" method="post">
+                            <input type="hidden" id="deptId" name="id">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Department Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success">Save Department</button>
+                                <button type="button" class="btn btn-secondary" onclick="resetForm()">Clear</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Existing Departments</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${param.success}" class="alert alert-success">Operation successful.</div>
+                        <div th:if="${param.error}" class="alert alert-danger">Error: Could not delete department (it may have associated users or courses).</div>
+
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="dept : ${departments}">
+                                    <td th:text="${dept.id}">1</td>
+                                    <td th:text="${dept.name}">Computer Science</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" 
+                                                th:onclick="'editDepartment(' + ${dept.id} + ', \'' + ${dept.name} + '\')'">Edit</button>
+                                        <a th:href="@{/admin/department/delete/{id}(id=${dept.id})}" 
+                                           class="btn btn-sm btn-danger" 
+                                           onclick="return confirm('Are you sure? This cannot be undone.')">Delete</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function editDepartment(id, name) {
+            document.getElementById('deptId').value = id;
+            document.getElementById('name').value = name;
+        }
+        function resetForm() {
+            document.getElementById('deptId').value = '';
+            document.getElementById('name').value = '';
+        }
+    </script>
+</body>
+</html>

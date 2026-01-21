@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Calendar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/student/dashboard">Student Portal</a>
+            <a href="/student/dashboard" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="mb-4">Academic Calendar</h2>
+
+        <div class="row">
+            <!-- Weekly Schedule -->
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Weekly Class Schedule</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Classes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="day : ${{'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'}}">
+                                        <td class="fw-bold align-middle" th:text="${day}">MONDAY</td>
+                                        <td>
+                                            <div th:each="s : ${schedules}" th:if="${s.dayOfWeek == day}" class="mb-2 p-2 border rounded bg-light text-start">
+                                                <strong th:text="${s.course.courseCode}">CSC101</strong><br>
+                                                <span th:text="${s.startTime} + ' - ' + ${s.endTime}">09:00 - 10:00</span><br>
+                                                <small class="text-muted" th:text="${s.room}">Hall A</small>
+                                            </div>
+                                            <div th:if="${#lists.isEmpty(schedules.?[dayOfWeek == #root.day])}" class="text-muted small">
+                                                No classes
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Deadlines -->
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Upcoming Deadlines</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a th:each="assign : ${assignments}" th:href="@{/student/assignment/{id}(id=${assign.id})}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1" th:text="${assign.course.courseCode}">CSC101</h6>
+                                <small class="text-danger" th:text="${#temporals.format(assign.dueDate, 'dd-MM')}">Date</small>
+                            </div>
+                            <p class="mb-1" th:text="${assign.title}">Assignment Title</p>
+                            <small class="text-muted" th:text="${#temporals.format(assign.dueDate, 'HH:mm')}">Time</small>
+                        </a>
+                        <div th:if="${#lists.isEmpty(assignments)}" class="list-group-item text-muted">No upcoming assignments.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
