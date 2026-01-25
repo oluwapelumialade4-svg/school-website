@@ -40,8 +40,8 @@ public class SecurityConfig {
             .rememberMe(rememberMe -> rememberMe
                 .key("uniqueAndSecret")
             )
-            // Allow H2 Console to render (for development)
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+            // Disable CSRF for now to allow Course creation and other POST requests easily
+            .csrf(csrf -> csrf.disable())
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .exceptionHandling(ex -> ex
                 .accessDeniedHandler(customAccessDeniedHandler)

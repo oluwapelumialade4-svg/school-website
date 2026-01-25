@@ -1,37 +1,53 @@
 package siwes.project.school_website.config;
 
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 import siwes.project.school_website.entity.Role;
 import siwes.project.school_website.entity.User;
 import siwes.project.school_website.repository.UserRepository;
 
-@Configuration
+@Component
+@RequiredArgsConstructor
 public class DataSeeder {
 
-    @Bean
-    public CommandLineRunner initData(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        return args -> {
-            // Only initialize if the database is empty
-            if (userRepository.count() == 0) {
-                User student = new User();
-                student.setUsername("student");
-                student.setPassword(passwordEncoder.encode("password"));
-                student.setRole(Role.STUDENT);
-                student.setFullName("Test Student");
-                student.setEmail("student@school.com");
-                userRepository.save(student);
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-                User lecturer = new User();
-                lecturer.setUsername("lecturer");
-                lecturer.setPassword(passwordEncoder.encode("password"));
-                lecturer.setRole(Role.LECTURER);
-                lecturer.setFullName("Test Lecturer");
-                lecturer.setEmail("lecturer@school.com");
-                userRepository.save(lecturer);
-            }
-        };
+    @EventListener(ContextRefreshedEvent.class)
+    public void initData() {
+        // Ensure Admin exists
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setRole(Role.ADMIN);
+            admin.setFullName("System Admin");
+            admin.setEmail("admin@school.com");
+            userRepository.save(admin);
+        }
+
+        // Initialize other users if they don't exist
+        if (userRepository.findByUsername("student").isEmpty()) {
+            User student = new User();
+            student.setUsername("student");
+            student.setPassword(passwordEncoder.encode("password"));
+            student.setRole(Role.STUDENT);
+            student.setFullName("Test Student");
+            student.setEmail("student@school.com");
+            userRepository.save(student);
+        }
+
+        if (userRepository.findByUsername("lecturer").isEmpty()) {
+            User lecturer = new User();
+            lecturer.setUsername("lecturer");
+            lecturer.setPassword(passwordEncoder.encode("password"));
+            lecturer.setRole(Role.LECTURER);
+            lecturer.setFullName("Test Lecturer");
+            lecturer.setEmail("lecturer@school.com");
+            userRepository.save(lecturer);
+        }
     }
 }
