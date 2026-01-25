@@ -1,0 +1,26 @@
+# Exclude unnecessary files for Docker builds
+.git
+.gitignore
+README.md
+HELP.md
+.vscode/
+.mvn/wrapper/maven-wrapper.jar
+target/
+*.log
+app.log
+app_error.log
+app_output.log
+build.log
+full_build.log
+rebuild.log
+rebuild2.log
+rebuild3.log
+startup.log
+tests.log
+problems.log
+uploads/
+fly.toml
+Procfile
+run_app.bat
+system.properties
+dashboard.html

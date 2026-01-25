@@ -1,0 +1,1 @@
+web: java -Xmx512m -Xms256m -jar target/school-website-0.0.1-SNAPSHOT.jar
