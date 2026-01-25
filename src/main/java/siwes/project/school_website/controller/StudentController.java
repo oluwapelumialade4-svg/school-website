@@ -16,9 +16,12 @@ import siwes.project.school_website.service.AssignmentService;
 import siwes.project.school_website.service.SubmissionService;
 import siwes.project.school_website.service.UserService;
 import siwes.project.school_website.entity.User;
+import siwes.project.school_website.entity.Course;
+import siwes.project.school_website.entity.ClassSchedule;
+import siwes.project.school_website.repository.CourseRepository;
+import siwes.project.school_website.repository.ClassScheduleRepository;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.Optional;
 import java.util.List;
 import java.util.Set;
@@ -33,13 +36,15 @@ public class StudentController {
     private final AssignmentService assignmentService;
     private final SubmissionService submissionService;
     private final UserService userService;
+    private final CourseRepository courseRepository;
+    private final ClassScheduleRepository classScheduleRepository;
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model, Principal principal) {
+    public String dashboard(Model model, java.security.Principal principal) {
         String username = principal != null ? principal.getName() : "Student";
         User user = userService.findByUsername(username).orElse(new User());
         if (user.getDepartment() != null) {
-            model.addAttribute("assignments", assignmentService.getAssignmentsByDepartment(user.getDepartment()));
+            model.addAttribute("assignments", assignmentService.getAssignmentsByDepartmentAndLevel(user.getDepartment(), user.getLevel()));
             
             List<Submission> submissions = submissionService.getSubmissionsForStudent(user);
             Set<Long> submittedAssignmentIds = submissions.stream()
@@ -56,7 +61,7 @@ public class StudentController {
     }
 
     @GetMapping("/assignment/{id}")
-    public String viewAssignment(@PathVariable Long id, Model model, Principal principal) {
+    public String viewAssignment(@PathVariable Long id, Model model, java.security.Principal principal) {
         String username = principal != null ? principal.getName() : "Student";
 
         Assignment assignment = assignmentService.getAssignmentById(id)
@@ -71,7 +76,7 @@ public class StudentController {
     }
 
     @PostMapping("/assignment/{id}/submit")
-    public String submitAssignment(@PathVariable Long id, @RequestParam("file") MultipartFile file, Principal principal) {
+    public String submitAssignment(@PathVariable Long id, @RequestParam("file") MultipartFile file, java.security.Principal principal) {
         if (file.isEmpty()) {
             return "redirect:/student/assignment/" + id + "?error";
         }
@@ -87,7 +92,7 @@ public class StudentController {
     }
 
     @GetMapping("/submission/{id}/download")
-    public ResponseEntity<Resource> downloadSubmission(@PathVariable Long id, Principal principal) {
+    public ResponseEntity<Resource> downloadSubmission(@PathVariable Long id, java.security.Principal principal) {
         Submission submission = submissionService.getSubmissionById(id);
         String username = principal != null ? principal.getName() : "";
         if (!submission.getStudent().getUsername().equals(username)) {
@@ -99,8 +104,28 @@ public class StudentController {
                 .body(file);
     }
 
+    @GetMapping("/course/{courseId}/schedule")
+    public String viewClassSchedule(@PathVariable Long courseId, Model model, java.security.Principal principal) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+
+        // Get the current user
+        String username = principal.getName();
+        User user = userService.findByUsername(username).orElseThrow();
+
+        // Check if the student is enrolled in this course (you might want to add enrollment logic)
+        // For now, we'll allow access if the user is a student
+
+        List<ClassSchedule> schedules = classScheduleRepository.findByCourse(course);
+
+        model.addAttribute("course", course);
+        model.addAttribute("schedules", schedules);
+
+        return "class-schedule";
+    }
+
     @GetMapping("/profile")
-    public String editProfile(Model model, Principal principal) {
+    public String editProfile(Model model, java.security.Principal principal) {
         String username = principal.getName();
         User user = userService.findByUsername(username).orElseThrow();
         model.addAttribute("user", user);
@@ -116,7 +141,7 @@ public class StudentController {
                                 @RequestParam String level,
                                 @RequestParam String department,
                                 @RequestParam(required = false) MultipartFile file,
-                                Principal principal) throws IOException {
+                                java.security.Principal principal) throws IOException {
         // Validate Matric Number (Must be exactly 7 digits, e.g., 2403082)
         if (!matricNumber.matches("\\d{7}")) {
             return "redirect:/student/profile?error=invalidMatric";

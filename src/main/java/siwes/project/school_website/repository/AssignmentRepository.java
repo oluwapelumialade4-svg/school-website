@@ -12,4 +12,7 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
     // Fetch assignments for a specific course
     List<Assignment> findByCourseId(Long courseId);
+
+    // Fetch assignments by department and level
+    List<Assignment> findByDepartmentAndLevel(Department department, String level);
 }

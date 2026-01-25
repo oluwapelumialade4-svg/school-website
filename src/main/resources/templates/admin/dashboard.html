@@ -19,6 +19,18 @@
     </nav>
 
     <div class="container mt-4">
+        <!-- Success Alert for Course Assignment -->
+        <div th:if="${param.success == 'assigned'}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Course assigned successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Error Alert for Course Assignment -->
+        <div th:if="${param.error == 'InvalidLecturer'}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error!</strong> Could not assign course. The selected user is not a lecturer.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <h2>Admin Dashboard</h2>
 
         <!-- User Management Section -->
@@ -117,6 +129,7 @@
                                 <th>Credits</th>
                                 <th>Department</th>
                                 <th>Lecturer</th>
+                                <th>Assign Lecturer</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -126,6 +139,21 @@
                                 <td th:text="${course.creditUnits}">3</td>
                                 <td th:text="${course.department.name}">Department</td>
                                 <td th:text="${course.lecturer != null ? course.lecturer.fullName : 'Not Assigned'}">Lecturer</td>
+                                <td>
+                                    <form th:action="@{/admin/assign-course}" method="post" class="d-flex">
+                                        <input type="hidden" name="courseId" th:value="${course.id}" />
+                                        <select name="lecturerId" class="form-select form-select-sm me-2" required>
+                                            <option value="" disabled selected>Select Lecturer</option>
+                                            <option th:each="lecturer : ${lecturers}" 
+                                                    th:value="${lecturer.id}" 
+                                                    th:text="${lecturer.fullName}"
+                                                    th:selected="${course.lecturer != null && course.lecturer.id == lecturer.id}">
+                                                Lecturer Name
+                                            </option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">Assign</button>
+                                    </form>
+                                </td>
                             </tr>
                         </tbody>
                     </table>

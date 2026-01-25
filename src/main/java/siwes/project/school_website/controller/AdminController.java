@@ -54,6 +54,7 @@ public class AdminController {
 
         // Pass data to the view. You might want to add a method to UserService to fetch all users.
         model.addAttribute("assignments", assignmentService.getAllAssignments());
+        model.addAttribute("lecturers", userService.getUsersByRole(Role.LECTURER));
         
         Pageable pageable = PageRequest.of(page, size);
         Page<User> users = (role != null) ? userService.getUsersByRole(role, pageable) : userService.getAllUsers(pageable);
@@ -91,6 +92,18 @@ public class AdminController {
         Course course = new Course(null, name, dept);
         courseRepository.save(course);
         return "redirect:/admin/dashboard";
+    }
+
+    @PostMapping("/assign-course")
+    public String assignCourse(@RequestParam Long courseId, @RequestParam Long lecturerId) {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
+        User lecturer = userService.getUserById(lecturerId);
+        if (lecturer.getRole() != Role.LECTURER) {
+            return "redirect:/admin/dashboard?error=InvalidLecturer";
+        }
+        course.setLecturer(lecturer);
+        courseRepository.save(course);
+        return "redirect:/admin/dashboard?success=assigned";
     }
 
     @GetMapping("/assignment/delete/{id}")

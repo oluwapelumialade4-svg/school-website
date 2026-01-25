@@ -2,6 +2,7 @@ package siwes.project.school_website.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import siwes.project.school_website.entity.Assignment;
 import siwes.project.school_website.repository.AssignmentRepository;
 import siwes.project.school_website.entity.Department;
@@ -11,6 +12,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
@@ -21,6 +23,10 @@ public class AssignmentService {
 
     public List<Assignment> getAssignmentsByDepartment(Department department) {
         return assignmentRepository.findByCourse_Department(department);
+    }
+
+    public List<Assignment> getAssignmentsByDepartmentAndLevel(Department department, String level) {
+        return assignmentRepository.findByDepartmentAndLevel(department, level);
     }
 
     @SuppressWarnings("null")

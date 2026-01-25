@@ -15,12 +15,17 @@ public class Assignment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
     
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "due_date")
     private LocalDate dueDate;
+
+    @Column(name = "level")
+    private String level;
 
     @ManyToOne
     @JoinColumn(name = "created_by_id")
@@ -46,6 +51,9 @@ public class Assignment {
 
     public LocalDate getDueDate() { return dueDate; }
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+
+    public String getLevel() { return level; }
+    public void setLevel(String level) { this.level = level; }
 
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
