@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import siwes.project.school_website.entity.Role;
 import siwes.project.school_website.entity.User;
@@ -27,13 +28,16 @@ public class DataSeeder {
     private final AssignmentRepository assignmentRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${ADMIN_PASSWORD:admin123}")
+    private String adminPassword;
+
     @EventListener(ContextRefreshedEvent.class)
     public void initData() {
         // Ensure Admin exists
         if (userRepository.findByUsername("admin").isEmpty()) {
             User admin = new User();
             admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setPassword(passwordEncoder.encode(adminPassword));
             admin.setRole(Role.ADMIN);
             admin.setFullName("System Admin");
             admin.setEmail("admin@school.com");

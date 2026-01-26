@@ -34,6 +34,16 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="level" class="form-label">Level</label>
+                            <select name="level" id="level" class="form-select" required>
+                                <option value="100L">100 Level</option>
+                                <option value="200L">200 Level</option>
+                                <option value="300L">300 Level</option>
+                                <option value="400L">400 Level</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="title" class="form-label">Assignment Title</label>
                             <input type="text" class="form-control" id="title" th:field="*{title}" required>
                         </div>

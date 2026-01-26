@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.security.Principal;
 
@@ -43,6 +44,7 @@ public class AdminController {
     private final CourseRepository courseRepository;
     private final AssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/dashboard")
     public String dashboard(@RequestParam(required = false) Role role, 
@@ -77,6 +79,14 @@ public class AdminController {
         return "redirect:/admin/dashboard";
     }
 
+    @PostMapping("/user/reset-password")
+    public String resetUserPassword(@RequestParam Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Invalid User ID"));
+        user.setPassword(passwordEncoder.encode("password123"));
+        userRepository.save(user);
+        return "redirect:/admin/dashboard?success=passwordReset";
+    }
+
     @PostMapping("/department/create")
     public String createDepartment(@RequestParam String name) {
         Department dept = new Department();
@@ -87,11 +97,28 @@ public class AdminController {
 
     @PostMapping("/course/create")
     @SuppressWarnings("null")
-    public String createCourse(@RequestParam String name, @RequestParam Long departmentId) {
+    public String createCourse(@RequestParam String name, 
+                               @RequestParam String courseCode, 
+                               @RequestParam Integer creditUnits, 
+                               @RequestParam Long departmentId) {
         Department dept = departmentRepository.findById(departmentId).orElseThrow();
-        Course course = new Course(null, name, dept);
+        Course course = new Course();
+        course.setName(name);
+        course.setCourseCode(courseCode);
+        course.setCreditUnits(creditUnits);
+        course.setDepartment(dept);
         courseRepository.save(course);
         return "redirect:/admin/dashboard";
+    }
+
+    @PostMapping("/course/update")
+    public String updateCourse(@RequestParam Long id, @RequestParam String name, @RequestParam String courseCode, @RequestParam Integer creditUnits) {
+        Course course = courseRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
+        course.setName(name);
+        course.setCourseCode(courseCode);
+        course.setCreditUnits(creditUnits);
+        courseRepository.save(course);
+        return "redirect:/admin/dashboard?success=courseUpdated";
     }
 
     @PostMapping("/assign-course")

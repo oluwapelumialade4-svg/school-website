@@ -70,6 +70,58 @@
             </div>
         </div>
     </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">My Grades & Submissions</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Average Grade Progress Bar -->
+                    <div class="mb-4" th:if="${averageGrade != null}">
+                        <h6 class="d-flex justify-content-between">
+                            <span>Average Performance</span>
+                            <span th:text="${averageGrade} + '%'">0%</span>
+                        </h6>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 th:style="'width: ' + ${averageGrade} + '%'"
+                                 th:aria-valuenow="${averageGrade}" aria-valuemin="0" aria-valuemax="100"
+                                 th:classappend="${averageGrade >= 70 ? 'bg-success' : (averageGrade >= 50 ? 'bg-warning' : 'bg-danger')}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(submissions)}" class="alert alert-info">
+                        You haven't submitted any assignments yet.
+                    </div>
+
+                    <div class="table-responsive" th:if="${!#lists.isEmpty(submissions)}">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Assignment</th>
+                                <th>Grade</th>
+                                <th>Feedback</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="submission : ${submissions}">
+                                <td th:text="${submission.assignment.title}">Title</td>
+                                <td>
+                                    <span th:if="${submission.grade != null}" th:text="${submission.grade} + '/100'" class="badge bg-success"></span>
+                                    <span th:if="${submission.grade == null}" class="badge bg-warning text-dark">Pending</span>
+                                </td>
+                                <td th:text="${submission.feedback != null ? submission.feedback : 'No feedback yet'}">Feedback</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>

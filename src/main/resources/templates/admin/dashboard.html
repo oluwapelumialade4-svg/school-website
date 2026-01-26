@@ -31,6 +31,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
+        <!-- Success Alert for Password Reset -->
+        <div th:if="${param.success == 'passwordReset'}" class="alert alert-success alert-dismissible fade show" role="alert">
+            User password has been reset to <strong>password123</strong>.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <h2>Admin Dashboard</h2>
 
         <!-- User Management Section -->
@@ -66,6 +72,10 @@
                                 <td th:text="${user.email}">email@example.com</td>
                                 <td th:text="${user.role}">ROLE</td>
                                 <td>
+                                    <form th:action="@{/admin/user/reset-password}" method="post" class="d-inline" onsubmit="return confirm('Reset this user\'s password to \'password123\'?');">
+                                        <input type="hidden" name="userId" th:value="${user.id}" />
+                                        <button type="submit" class="btn btn-warning btn-sm me-1">Reset Pass</button>
+                                    </form>
                                     <a th:href="@{/admin/user/delete/{id}(id=${user.id})}" class="btn btn-danger btn-sm"
                                        onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
                                 </td>
@@ -118,6 +128,9 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h5>Course Management</h5>
+                <button type="button" class="btn btn-sm btn-success float-end" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                    + Add New Course
+                </button>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -130,6 +143,7 @@
                                 <th>Department</th>
                                 <th>Lecturer</th>
                                 <th>Assign Lecturer</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -154,9 +168,73 @@
                                         <button type="submit" class="btn btn-primary btn-sm">Assign</button>
                                     </form>
                                 </td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" 
+                                            th:data-bs-target="'#editCourseModal' + ${course.id}">
+                                        Edit
+                                    </button>
+                                    
+                                    <!-- Edit Course Modal -->
+                                    <div class="modal fade" th:id="'editCourseModal' + ${course.id}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Edit Course</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form th:action="@{/admin/course/update}" method="post">
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="id" th:value="${course.id}">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Course Code</label>
+                                                            <input type="text" class="form-control" name="courseCode" th:value="${course.courseCode}" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Course Name</label>
+                                                            <input type="text" class="form-control" name="name" th:value="${course.name}" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Credit Units</label>
+                                                            <input type="number" class="form-control" name="creditUnits" th:value="${course.creditUnits}" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Course Modal -->
+        <div class="modal fade" id="addCourseModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Course</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form th:action="@{/admin/course/create}" method="post">
+                        <div class="modal-body">
+                            <div class="mb-3"><label class="form-label">Course Code</label><input type="text" class="form-control" name="courseCode" placeholder="e.g. CSC101" required></div>
+                            <div class="mb-3"><label class="form-label">Course Name</label><input type="text" class="form-control" name="name" placeholder="e.g. Intro to Java" required></div>
+                            <div class="mb-3"><label class="form-label">Credit Units</label><input type="number" class="form-control" name="creditUnits" value="3" required></div>
+                            <div class="mb-3"><label class="form-label">Department</label>
+                                <select name="departmentId" class="form-select" required>
+                                    <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer"><button type="submit" class="btn btn-success">Create Course</button></div>
+                    </form>
                 </div>
             </div>
         </div>

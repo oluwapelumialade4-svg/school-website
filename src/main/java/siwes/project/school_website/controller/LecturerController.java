@@ -9,7 +9,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import siwes.project.school_website.entity.Assignment;
 import siwes.project.school_website.entity.Submission;
+import siwes.project.school_website.entity.Course;
 import siwes.project.school_website.entity.User;
+import siwes.project.school_website.repository.CourseRepository;
 import siwes.project.school_website.service.AssignmentService;
 import siwes.project.school_website.service.SubmissionService;
 import siwes.project.school_website.service.UserService;
@@ -19,6 +21,7 @@ import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/lecturer")
@@ -28,6 +31,7 @@ public class LecturerController {
     private final AssignmentService assignmentService;
     private final SubmissionService submissionService;
     private final UserService userService;
+    private final CourseRepository courseRepository;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
@@ -136,5 +140,17 @@ public class LecturerController {
     public String deleteAssignment(@PathVariable Long id) {
         assignmentService.deleteAssignment(id);
         return "redirect:/lecturer/dashboard?deleted";
+    }
+
+    @GetMapping("/course/{id}/students")
+    public String viewEnrolledStudents(@PathVariable Long id, Model model) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
+        
+        List<User> students = userService.getStudentsByDepartment(course.getDepartment());
+        
+        model.addAttribute("course", course);
+        model.addAttribute("students", students);
+        return "course-students";
     }
 }

@@ -44,6 +44,7 @@
                             <span class="badge bg-primary rounded-pill me-1">Materials</span>
                             <object><a th:href="@{/lecturer/course/{id}/schedule(id=${course.id})}" class="badge bg-secondary rounded-pill text-decoration-none">Schedule</a></object>
                             <object><a th:href="@{/lecturer/course/{id}/forum(id=${course.id})}" class="badge bg-warning text-dark rounded-pill text-decoration-none ms-1">Forum</a></object>
+                            <object><a th:href="@{/lecturer/course/{id}/students(id=${course.id})}" class="badge bg-info text-dark rounded-pill text-decoration-none ms-1">Students</a></object>
                         </div>
                     </a>
                 </div>
@@ -58,7 +59,41 @@
                         <p class="card-text text-truncate" th:text="${assignment.description}">Description...</p>
                         <p class="card-text"><small class="text-muted">Due: <span th:text="${assignment.dueDate}">Date</span></small></p>
                         <a th:href="@{/lecturer/assignment/{id}/submissions(id=${assignment.id})}" class="btn btn-outline-success">View Submissions</a>
+                        <button class="btn btn-outline-warning" data-bs-toggle="modal" th:data-bs-target="'#editAssignmentModal' + ${assignment.id}">Edit</button>
                         <a th:href="@{/lecturer/assignment/delete/{id}(id=${assignment.id})}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this assignment?')">Delete</a>
+
+                        <!-- Edit Assignment Modal -->
+                        <div class="modal fade" th:id="'editAssignmentModal' + ${assignment.id}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Assignment</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form th:action="@{/lecturer/assignment/update}" method="post">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="id" th:value="${assignment.id}">
+                                            <div class="mb-3">
+                                                <label class="form-label">Title</label>
+                                                <input type="text" class="form-control" name="title" th:value="${assignment.title}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control" name="description" rows="3" th:text="${assignment.description}"></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Due Date</label>
+                                                <input type="datetime-local" class="form-control" name="dueDate" th:value="${assignment.dueDate}" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

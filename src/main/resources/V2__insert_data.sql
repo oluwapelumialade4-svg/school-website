@@ -1,4 +1,4 @@
--- Initial Data
+-- V2__insert_data.sql
 
 -- Departments
 INSERT INTO department (id, name) VALUES (1, 'Computer Science');
@@ -18,9 +18,12 @@ INSERT INTO course (id, name, course_code, credit_units, department_id, lecturer
 INSERT INTO assignment (id, title, description, created_by_id, department_id, course_id, level) VALUES (1, 'Java Basics', 'Complete the exercises on Chapter 1', 102, 1, 1, '100L');
 INSERT INTO assignment (id, title, description, created_by_id, department_id, course_id, level) VALUES (2, 'Spring Boot Portal', 'Complete the SIWES project dashboard', 102, 1, 2, '100L');
 
--- Reset Sequences (PostgreSQL specific)
--- This fixes the "Duplicate Key" error when you try to create NEW users/courses after these inserts
+-- Reset Sequences to avoid ID conflicts for future inserts
+-- This ensures the next ID generated is greater than the max ID currently in the table
 SELECT setval(pg_get_serial_sequence('department', 'id'), (SELECT MAX(id) FROM department));
 SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
 SELECT setval(pg_get_serial_sequence('course', 'id'), (SELECT MAX(id) FROM course));
 SELECT setval(pg_get_serial_sequence('assignment', 'id'), (SELECT MAX(id) FROM assignment));
+
+-- Note: If using H2 for testing, the syntax is slightly different: ALTER TABLE table_name ALTER COLUMN id RESTART WITH (SELECT MAX(id) + 1 FROM table_name);
+-- The above syntax is for PostgreSQL.

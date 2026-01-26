@@ -51,9 +51,20 @@ public class StudentController {
                     .map(s -> s.getAssignment().getId())
                     .collect(Collectors.toSet());
             model.addAttribute("submittedAssignmentIds", submittedAssignmentIds);
+            model.addAttribute("submissions", submissions);
+
+            // Calculate Average Grade
+            double average = submissions.stream()
+                    .filter(s -> s.getGrade() != null)
+                    .mapToInt(Submission::getGrade)
+                    .average()
+                    .orElse(0.0);
+            model.addAttribute("averageGrade", (int) Math.round(average));
         } else {
             model.addAttribute("assignments", Collections.emptyList());
             model.addAttribute("submittedAssignmentIds", Collections.emptySet());
+            model.addAttribute("submissions", Collections.emptyList());
+            model.addAttribute("averageGrade", 0);
         }
         model.addAttribute("username", username);
         model.addAttribute("user", user);
