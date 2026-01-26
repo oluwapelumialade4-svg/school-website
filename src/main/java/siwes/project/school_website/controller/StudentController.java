@@ -13,6 +13,10 @@ import siwes.project.school_website.repository.AssignmentRepository;
 import siwes.project.school_website.repository.CourseRepository;
 import siwes.project.school_website.repository.UserRepository;
 
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.*;
+
 import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +36,7 @@ public class StudentController {
         User student = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        model.addAttribute("student", student);
+        model.addAttribute("user", student);
         // Fetch assignments matching the student's department and level
         model.addAttribute("assignments", assignmentRepository.findByDepartmentAndLevel(student.getDepartment(), student.getLevel()));
         model.addAttribute("courses", student.getRegisteredCourses());
@@ -90,5 +94,36 @@ public class StudentController {
             userRepository.save(student);
         }
         return "redirect:/student/dashboard?dropped";
+    }
+
+    @GetMapping("/profile")
+    public String viewProfile(Model model, Principal principal) {
+        String username = principal.getName();
+        User user = userRepository.findByUsername(username).orElseThrow();
+        model.addAttribute("user", user);
+        return "student/profile";
+    }
+
+    @PostMapping("/profile")
+    public String updateProfile(@RequestParam String fullName,
+                                @RequestParam String email,
+                                @RequestParam String phoneNumber,
+                                @RequestParam(required = false) MultipartFile file,
+                                Principal principal) throws IOException {
+        String username = principal.getName();
+        User user = userRepository.findByUsername(username).orElseThrow();
+
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhoneNumber(phoneNumber);
+
+        if (file != null && !file.isEmpty()) {
+            String filename = System.currentTimeMillis() + "_profile_" + file.getOriginalFilename();
+            Files.copy(file.getInputStream(), Paths.get("uploads").resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            user.setProfilePic(filename);
+        }
+
+        userRepository.save(user);
+        return "redirect:/student/profile?success";
     }
 }

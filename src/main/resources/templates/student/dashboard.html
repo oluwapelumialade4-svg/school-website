@@ -15,7 +15,7 @@
             <a class="navbar-brand" href="#">School Portal (Student)</a>
             <div class="d-flex align-items-center text-white">
                 <span class="me-3">Welcome, <span th:text="${username}" class="fw-bold">Student</span></span>
-                <a href="/student/profile" class="btn btn-outline-light btn-sm me-2">Profile</a>
+                <a th:href="@{/student/profile}" class="btn btn-outline-light btn-sm me-2">Profile</a>
                 <form th:action="@{/logout}" method="post" class="d-inline">
                     <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
                 </form>
