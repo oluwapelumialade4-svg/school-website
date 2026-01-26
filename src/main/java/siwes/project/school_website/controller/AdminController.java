@@ -205,10 +205,7 @@ public class AdminController {
 
     @GetMapping("/department/delete/{id}")
     public String deleteDepartment(@PathVariable Long id) {
-        Long safeId = Optional.ofNullable(id).orElse(null);
-        if (safeId == null) {
-            return "redirect:/admin/departments?error=InvalidID";
-        }
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Department ID cannot be null"));
         try {
             departmentRepository.deleteById(safeId);
         } catch (Exception e) {
