@@ -70,7 +70,10 @@ public class StudentController {
         String level = (student.getLevel() != null) ? student.getLevel() : "";
 
         // Fetch assignments matching the student's Department entity and level (case-insensitive ensured by using the entity)
-        model.addAttribute("assignments", assignmentRepository.findByDepartmentAndLevel(student.getDepartment(), level));
+        List<Assignment> assignments = (student.getDepartment() != null) ? 
+            assignmentRepository.findByDepartmentAndLevel(student.getDepartment(), level) : 
+            Collections.emptyList();
+        model.addAttribute("assignments", assignments);
         
         // Get submitted assignment IDs
         List<Long> submittedAssignmentIds = submissionService.getSubmissionsForStudent(student).stream()
@@ -206,6 +209,7 @@ public class StudentController {
     }
 
     @GetMapping("/assignment/{id}")
+    @SuppressWarnings("null")
     public String viewAssignment(@PathVariable Long id, Model model, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
@@ -230,8 +234,7 @@ public class StudentController {
         return "student/assignment-view";
     }
 
-    @GetMapping("/assignment/{id}/submit")
-    public String submitAssignment(@PathVariable Long id, @RequestParam MultipartFile file, Principal principal) throws IOException {
+    @GetMapping("/assignment/{id}/submit")    @SuppressWarnings("null")    public String submitAssignment(@PathVariable Long id, @RequestParam MultipartFile file, Principal principal) throws IOException {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
 
@@ -253,12 +256,13 @@ public class StudentController {
     }
 
     @GetMapping("/material/{id}/download")
+    @SuppressWarnings("null")
     public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id) throws IOException {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Material ID cannot be null"));
         // Assuming CourseMaterialRepository is injected, but it's not. Wait, in the code, it's courseMaterialRepository
         // But in StudentController, it is injected.
         var material = courseMaterialRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Material not found"));
-        Path filePath = Paths.get(material.getFilePath());
+        Path filePath = Paths.get("uploads").resolve(material.getFilePath());
         Resource resource = new UrlResource(filePath.toUri());
         if (resource.exists() && resource.isReadable()) {
             return ResponseEntity.ok()
@@ -270,6 +274,7 @@ public class StudentController {
     }
 
     @GetMapping("/submission/{id}/download")
+    @SuppressWarnings("null")
     public ResponseEntity<Resource> downloadSubmission(@PathVariable Long id, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
