@@ -89,6 +89,7 @@ public class StudentController {
     }
 
     @PostMapping("/course/register")
+    @SuppressWarnings("null")
     public String registerCourse(@RequestParam Long courseId, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
@@ -113,6 +114,7 @@ public class StudentController {
     }
 
     @PostMapping("/course/drop")
+    @SuppressWarnings("null")
     public String dropCourse(@RequestParam Long courseId, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
@@ -156,6 +158,7 @@ public class StudentController {
     }
 
     @GetMapping("/course/{id}/materials")
+    @SuppressWarnings("null")
     public String viewCourseMaterials(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(safeId).orElseThrow();
@@ -165,6 +168,7 @@ public class StudentController {
     }
 
     @GetMapping("/course/{id}/schedule")
+    @SuppressWarnings("null")
     public String viewClassSchedule(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(safeId).orElseThrow();
@@ -174,6 +178,7 @@ public class StudentController {
     }
 
     @GetMapping("/course/{id}/forum")
+    @SuppressWarnings("null")
     public String viewCourseForum(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(safeId).orElseThrow();

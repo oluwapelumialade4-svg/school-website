@@ -86,6 +86,7 @@ public class AdminController {
     @PostMapping("/user/reset-password")
     public String resetUserPassword(@RequestParam Long userId) {
         Long safeUserId = Optional.ofNullable(userId).orElseThrow(() -> new IllegalArgumentException("User ID cannot be null"));
+        Objects.requireNonNull(safeUserId, "User ID must not be null");
         User user = userRepository.findById(safeUserId).orElseThrow(() -> new IllegalArgumentException("Invalid User ID"));
         user.setPassword(passwordEncoder.encode("password123"));
         userRepository.save(user);
@@ -106,6 +107,7 @@ public class AdminController {
                                @RequestParam Integer creditUnits, 
                                @RequestParam Long departmentId) {
         Long safeDeptId = Optional.ofNullable(departmentId).orElseThrow(() -> new IllegalArgumentException("Department ID cannot be null"));
+        Objects.requireNonNull(safeDeptId, "Department ID must not be null");
         Department dept = departmentRepository.findById(safeDeptId).orElseThrow();
         Course course = new Course();
         course.setName(name);
@@ -119,6 +121,7 @@ public class AdminController {
     @PostMapping("/course/update")
     public String updateCourse(@RequestParam Long id, @RequestParam String name, @RequestParam String courseCode, @RequestParam Integer creditUnits) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Objects.requireNonNull(safeId, "Course ID must not be null");
         Course course = courseRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
         course.setName(name);
         course.setCourseCode(courseCode);
@@ -130,7 +133,9 @@ public class AdminController {
     @PostMapping("/assign-course")
     public String assignCourse(@RequestParam Long courseId, @RequestParam Long lecturerId) {
         Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Objects.requireNonNull(safeCourseId, "Course ID must not be null");
         Long safeLecturerId = Optional.ofNullable(lecturerId).orElseThrow(() -> new IllegalArgumentException("Lecturer ID cannot be null"));
+        Objects.requireNonNull(safeLecturerId, "Lecturer ID must not be null");
         Course course = courseRepository.findById(safeCourseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
         User lecturer = userRepository.findById(safeLecturerId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid Lecturer ID"));
@@ -151,6 +156,7 @@ public class AdminController {
     @GetMapping("/course/{id}")
     public String viewCourseDetails(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Objects.requireNonNull(safeId, "Course ID must not be null");
         Course course = courseRepository.findById(safeId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
         
@@ -164,6 +170,7 @@ public class AdminController {
     @GetMapping("/course/{id}/export")
     public void exportCourseStudents(@PathVariable Long id, HttpServletResponse response) throws IOException {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Objects.requireNonNull(safeId, "Course ID must not be null");
         Course course = courseRepository.findById(safeId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
         
@@ -204,6 +211,7 @@ public class AdminController {
     }
 
     @GetMapping("/department/delete/{id}")
+    @SuppressWarnings("null")
     public String deleteDepartment(@PathVariable Long id) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Department ID cannot be null"));
         try {

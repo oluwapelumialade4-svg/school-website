@@ -8,6 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     @Override
+    @SuppressWarnings("null")
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/", "classpath:/templates/");

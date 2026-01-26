@@ -18,6 +18,7 @@ import siwes.project.school_website.service.UserService;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import java.util.Objects;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -55,6 +56,7 @@ public class LecturerController {
     @GetMapping("/assignment/{id}/submissions")
     public String viewSubmissions(@PathVariable Long id, Model model, Principal principal) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
+        Objects.requireNonNull(safeId, "Assignment ID must not be null");
         Assignment assignment = assignmentService.getAssignmentById(safeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
         
@@ -101,6 +103,7 @@ public class LecturerController {
     }
 
     @PostMapping("/assignment/create")
+    @SuppressWarnings("null")
     public String createAssignment(@ModelAttribute Assignment assignment, @RequestParam Long courseId, Principal principal) {
         String username = principal.getName();
         User lecturer = userService.findByUsername(username)
@@ -178,6 +181,7 @@ public class LecturerController {
     }
 
     @GetMapping("/course/{id}/students")
+    @SuppressWarnings("null")
     public String viewEnrolledStudents(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(safeId)
