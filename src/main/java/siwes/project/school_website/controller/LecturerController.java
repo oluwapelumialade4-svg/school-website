@@ -102,7 +102,8 @@ public class LecturerController {
         User lecturer = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-        Course course = courseRepository.findById(courseId).orElseThrow();
+        Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeCourseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
 
         // Validation: Ensure the lecturer is assigned to this course
         if (course.getLecturer() == null || !course.getLecturer().getId().equals(lecturer.getId())) {
