@@ -3,12 +3,7 @@ package siwes.project.school_website.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import siwes.project.school_website.entity.Course;
 import siwes.project.school_website.entity.User;
 import siwes.project.school_website.entity.Assignment;
@@ -277,7 +272,6 @@ public class StudentController {
     @SuppressWarnings("null")
     public ResponseEntity<Resource> downloadSubmission(@PathVariable Long id, Principal principal) {
         String username = principal.getName();
-        User student = userRepository.findByUsername(username).orElseThrow();
 
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Submission ID cannot be null"));
         Submission submission = submissionService.getSubmissionById(safeId);
@@ -290,6 +284,15 @@ public class StudentController {
         Resource file = submissionService.loadFileAsResource(submission.getSubmissionContent());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + submission.getSubmissionContent() + "\"")
+                .body(file);
+    }
+
+    @GetMapping("/profile-pic/{filename}")
+    @ResponseBody
+    public ResponseEntity<Resource> getProfilePic(@PathVariable String filename) {
+        Resource file = userService.loadProfilePic(filename);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "image/jpeg")
                 .body(file);
     }
 }

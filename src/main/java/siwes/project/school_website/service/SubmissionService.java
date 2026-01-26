@@ -50,10 +50,11 @@ public class SubmissionService {
         }
 
         String contentType = file.getContentType();
-        if (contentType == null || 
-                (!contentType.equals("application/pdf") && 
-                 !contentType.equals("application/msword") && 
-                 !contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) {
+        if (contentType != null && 
+                !contentType.contains("pdf") && 
+                !contentType.contains("word") && 
+                !contentType.contains("document") && 
+                !contentType.contains("msword")) {
             throw new IllegalArgumentException("Invalid file type. Only PDF and Word documents are allowed.");
         }
 
