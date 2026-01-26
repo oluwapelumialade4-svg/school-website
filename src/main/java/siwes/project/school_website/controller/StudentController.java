@@ -287,12 +287,11 @@ public class StudentController {
                 .body(file);
     }
 
-    @GetMapping("/profile-pic/{filename}")
-    @ResponseBody
-    public ResponseEntity<Resource> getProfilePic(@PathVariable String filename) {
-        Resource file = userService.loadProfilePic(filename);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, "image/jpeg")
-                .body(file);
+    @GetMapping("/test")
+    public String test(Model model) {
+        List<User> users = userRepository.findAll();
+        List<Assignment> assignments = assignmentRepository.findAll();
+        model.addAttribute("users", users);
+        model.addAttribute("assignments", assignments);
+        return "test";
     }
-}

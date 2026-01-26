@@ -5,9 +5,9 @@ INSERT INTO department (id, name) VALUES (1, 'Computer Science');
 INSERT INTO department (id, name) VALUES (2, 'Electrical Engineering');
 
 -- Users (Passwords are 'password' hashed with BCrypt, Admin is 'admin123')
-INSERT INTO users (id, username, password, role, full_name, email, department_id) VALUES (101, 'student', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', 'STUDENT', 'Test Student', 'student@school.com', 1);
+INSERT INTO users (id, username, password, role, full_name, email, phone_number, level, department_id) VALUES (101, 'student', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', 'STUDENT', 'Test Student', 'student@school.com', '1234567890', '100L', 1);
 INSERT INTO users (id, username, password, role, full_name, email, department_id) VALUES (102, 'lecturer', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', 'LECTURER', 'Test Lecturer', 'lecturer@school.com', 1);
-INSERT INTO users (id, username, password, role, full_name, email, matric_number, department_id) VALUES (103, 'adedayo', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', 'STUDENT', 'Adedayo Samuel', 'samuel@school.com', 'SCI/2024/001', 1);
+INSERT INTO users (id, username, password, role, full_name, email, matric_number, level, department_id) VALUES (103, 'adedayo', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', 'STUDENT', 'Adedayo Samuel', 'samuel@school.com', 'SCI/2024/001', '100L', 1);
 INSERT INTO users (id, username, password, role, full_name, email, department_id) VALUES (104, 'admin', '$2a$10$4drkCDPAbVGueJLh3c9o9uJEwG8GDQtJxswIbkMYZ93W8hH8wQaN2', 'ADMIN', 'Admin User', 'admin@school.edu', 1);
 
 -- Courses
@@ -20,7 +20,7 @@ INSERT INTO assignment (id, title, description, created_by_id, department_id, co
 
 -- Reset Sequences (PostgreSQL specific)
 -- This fixes the "Duplicate Key" error when you try to create NEW users/courses after these inserts
-SELECT setval(pg_get_serial_sequence('department', 'id'), (SELECT MAX(id) FROM department));
-SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
-SELECT setval(pg_get_serial_sequence('course', 'id'), (SELECT MAX(id) FROM course));
-SELECT setval(pg_get_serial_sequence('assignment', 'id'), (SELECT MAX(id) FROM assignment));
+-- SELECT setval(pg_get_serial_sequence('department', 'id'), (SELECT MAX(id) FROM department));
+-- SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
+-- SELECT setval(pg_get_serial_sequence('course', 'id'), (SELECT MAX(id) FROM course));
+-- SELECT setval(pg_get_serial_sequence('assignment', 'id'), (SELECT MAX(id) FROM assignment));

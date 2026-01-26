@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>Test Data</h1>
+    <h2>Users</h2>
+    <ul th:each="user : ${users}">
+        <li th:text="${user.username} + ' - ' + ${user.role}"></li>
+    </ul>
+    <h2>Assignments</h2>
+    <ul th:each="assignment : ${assignments}">
+        <li th:text="${assignment.title} + ' - ' + ${assignment.level}"></li>
+    </ul>
+</body>
+</html>
