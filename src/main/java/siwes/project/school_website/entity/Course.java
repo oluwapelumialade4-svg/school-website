@@ -5,6 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -31,6 +34,9 @@ public class Course {
     @JoinColumn(name = "lecturer_id")
     private User lecturer;
 
+    @ManyToMany(mappedBy = "registeredCourses")
+    private List<User> students = new ArrayList<>();
+
     // Explicit getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -49,6 +55,9 @@ public class Course {
 
     public User getLecturer() { return lecturer; }
     public void setLecturer(User lecturer) { this.lecturer = lecturer; }
+
+    public List<User> getStudents() { return students; }
+    public void setStudents(List<User> students) { this.students = students; }
 
     public Course(Long id, String name, Department department) {
         this.id = id;

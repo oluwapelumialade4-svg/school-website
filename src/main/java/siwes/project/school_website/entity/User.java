@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDateTime;
 
 @Entity
@@ -47,6 +49,14 @@ public class User {
 
     @Transient
     private String adminCode;
+
+    @ManyToMany
+    @JoinTable(
+        name = "student_courses",
+        joinColumns = @JoinColumn(name = "student_id"),
+        inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private List<Course> registeredCourses = new ArrayList<>();
 
     // Explicit getters and setters for Lombok compatibility
     public Long getId() { return id; }
@@ -93,4 +103,7 @@ public class User {
 
     public String getAdminCode() { return adminCode; }
     public void setAdminCode(String adminCode) { this.adminCode = adminCode; }
+
+    public List<Course> getRegisteredCourses() { return registeredCourses; }
+    public void setRegisteredCourses(List<Course> registeredCourses) { this.registeredCourses = registeredCourses; }
 }

@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/lecturer")
@@ -36,8 +37,17 @@ public class LecturerController {
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
         String username = principal != null ? principal.getName() : "Lecturer";
+        User lecturer = userService.findByUsername(username).orElseThrow();
+
         model.addAttribute("assignments", assignmentService.getAllAssignments());
         model.addAttribute("username", username);
+        
+        // Filter courses taught by this lecturer
+        List<Course> myCourses = courseRepository.findAll().stream()
+                .filter(c -> c.getLecturer() != null && c.getLecturer().getId().equals(lecturer.getId()))
+                .collect(Collectors.toList());
+        model.addAttribute("courses", myCourses);
+        
         return "lecturer/dashboard";
     }
 

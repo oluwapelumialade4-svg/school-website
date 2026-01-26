@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="#">School Portal (Lecturer)</a>
             <div class="d-flex align-items-center text-white">
@@ -19,36 +19,70 @@
     </nav>
 
     <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Manage Assignments</h2>
-            <a href="/lecturer/assignment/create" class="btn btn-primary">Create New Assignment</a>
-        </div>
+        <!-- Alerts -->
+        <div th:if="${param.created}" class="alert alert-success">Assignment created successfully!</div>
+        <div th:if="${param.deleted}" class="alert alert-success">Assignment deleted successfully!</div>
 
-        <div th:if="${param.deleted}" class="alert alert-success alert-dismissible fade show" role="alert">
-            Assignment deleted successfully!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-
-        <div class="row mt-3">
-            <div class="col-md-4 mb-3" th:each="assignment : ${assignments}">
-                <div class="card h-100">
+        <div class="row">
+            <!-- My Courses Section -->
+            <div class="col-md-12 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">My Courses</h5>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title" th:text="${assignment.title}">Assignment Title</h5>
-                        <p class="card-text text-truncate" th:text="${assignment.description}">Description...</p>
-                        <p class="card-text"><small class="text-muted">Due: <span th:text="${assignment.dueDate}">Date</span></small></p>
-                        <div class="d-flex gap-2">
-                            <a th:href="@{/lecturer/assignment/{id}/submissions(id=${assignment.id})}" class="btn btn-outline-success flex-fill">View Submissions</a>
-                            <a th:href="@{/lecturer/assignment/delete/{id}(id=${assignment.id})}" class="btn btn-outline-danger"
-                               onclick="return confirm('Are you sure you want to delete this assignment?')">Delete</a>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Course Code</th>
+                                        <th>Course Name</th>
+                                        <th>Units</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="course : ${courses}">
+                                        <td th:text="${course.courseCode}">CSC101</td>
+                                        <td th:text="${course.name}">Intro to Java</td>
+                                        <td th:text="${course.creditUnits}">3</td>
+                                        <td>
+                                            <a th:href="@{/lecturer/course/{id}/students(id=${course.id})}" class="btn btn-sm btn-info text-white">View Students</a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(courses)}">
+                                        <td colspan="4" class="text-center text-muted">You have not been assigned any courses yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-12" th:if="${#lists.isEmpty(assignments)}">
-                <div class="alert alert-info">No assignments found.</div>
+
+            <!-- Assignments Section -->
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">My Assignments</h5>
+                        <a href="/lecturer/assignment/create" class="btn btn-primary btn-sm">+ Create Assignment</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <div th:each="assignment : ${assignments}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1" th:text="${assignment.title}">Assignment Title</h5>
+                                    <small th:text="${assignment.dueDate}">Due Date</small>
+                                </div>
+                                <p class="mb-1" th:text="${assignment.description}">Description</p>
+                                <a th:href="@{/lecturer/assignment/{id}/submissions(id=${assignment.id})}" class="btn btn-sm btn-outline-primary mt-2">View Submissions</a>
+                                <a th:href="@{/lecturer/assignment/delete/{id}(id=${assignment.id})}" class="btn btn-sm btn-outline-danger mt-2" onclick="return confirm('Are you sure?')">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
