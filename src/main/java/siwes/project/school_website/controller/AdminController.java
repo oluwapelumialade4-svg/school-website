@@ -32,6 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.security.Principal;
+import java.util.Objects;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin")
@@ -70,7 +72,6 @@ public class AdminController {
         model.addAttribute("departments", departmentRepository.findAll());
         
         List<Course> courses = courseRepository.findAll();
-        System.out.println("DEBUG: Admin Dashboard - Courses found: " + courses.size());
         model.addAttribute("courses", courses);
 
         return "admin/dashboard";
@@ -78,13 +79,14 @@ public class AdminController {
 
     @GetMapping("/user/delete/{id}")
     public String deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+        Optional.ofNullable(id).ifPresent(userService::deleteUser);
         return "redirect:/admin/dashboard";
     }
 
     @PostMapping("/user/reset-password")
     public String resetUserPassword(@RequestParam Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Invalid User ID"));
+        Long safeUserId = Optional.ofNullable(userId).orElseThrow(() -> new IllegalArgumentException("User ID cannot be null"));
+        User user = userRepository.findById(safeUserId).orElseThrow(() -> new IllegalArgumentException("Invalid User ID"));
         user.setPassword(passwordEncoder.encode("password123"));
         userRepository.save(user);
         return "redirect:/admin/dashboard?success=passwordReset";
@@ -99,12 +101,12 @@ public class AdminController {
     }
 
     @PostMapping("/course/create")
-    @SuppressWarnings("null")
     public String createCourse(@RequestParam String name, 
                                @RequestParam String courseCode, 
                                @RequestParam Integer creditUnits, 
                                @RequestParam Long departmentId) {
-        Department dept = departmentRepository.findById(departmentId).orElseThrow();
+        Long safeDeptId = Optional.ofNullable(departmentId).orElseThrow(() -> new IllegalArgumentException("Department ID cannot be null"));
+        Department dept = departmentRepository.findById(safeDeptId).orElseThrow();
         Course course = new Course();
         course.setName(name);
         course.setCourseCode(courseCode);
@@ -116,7 +118,8 @@ public class AdminController {
 
     @PostMapping("/course/update")
     public String updateCourse(@RequestParam Long id, @RequestParam String name, @RequestParam String courseCode, @RequestParam Integer creditUnits) {
-        Course course = courseRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
         course.setName(name);
         course.setCourseCode(courseCode);
         course.setCreditUnits(creditUnits);
@@ -126,9 +129,12 @@ public class AdminController {
 
     @PostMapping("/assign-course")
     public String assignCourse(@RequestParam Long courseId, @RequestParam Long lecturerId) {
-        Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
-        User lecturer = userService.getUserById(lecturerId);
-        if (lecturer.getRole() != Role.LECTURER) {
+        Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Long safeLecturerId = Optional.ofNullable(lecturerId).orElseThrow(() -> new IllegalArgumentException("Lecturer ID cannot be null"));
+        Course course = courseRepository.findById(safeCourseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
+        User lecturer = userRepository.findById(safeLecturerId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid Lecturer ID"));
+        if (!Objects.equals(lecturer.getRole(), Role.LECTURER)) {
             return "redirect:/admin/dashboard?error=InvalidLecturer";
         }
         course.setLecturer(lecturer);
@@ -138,19 +144,14 @@ public class AdminController {
 
     @GetMapping("/assignment/delete/{id}")
     public String deleteAssignment(@PathVariable Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Assignment ID cannot be null");
-        }
-        assignmentRepository.deleteById(id);
+        Optional.ofNullable(id).ifPresent(assignmentRepository::deleteById);
         return "redirect:/admin/dashboard";
     }
 
     @GetMapping("/course/{id}")
     public String viewCourseDetails(@PathVariable Long id, Model model) {
-        if (id == null) {
-            throw new IllegalArgumentException("Course ID cannot be null");
-        }
-        Course course = courseRepository.findById(id)
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
         
         List<User> students = userService.getStudentsByDepartment(course.getDepartment());
@@ -162,10 +163,8 @@ public class AdminController {
 
     @GetMapping("/course/{id}/export")
     public void exportCourseStudents(@PathVariable Long id, HttpServletResponse response) throws IOException {
-        if (id == null) {
-            throw new IllegalArgumentException("Course ID cannot be null");
-        }
-        Course course = courseRepository.findById(id)
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
         
         List<User> students = userService.getStudentsByDepartment(course.getDepartment());
@@ -206,11 +205,12 @@ public class AdminController {
 
     @GetMapping("/department/delete/{id}")
     public String deleteDepartment(@PathVariable Long id) {
-        if (id == null) {
+        Long safeId = Optional.ofNullable(id).orElse(null);
+        if (safeId == null) {
             return "redirect:/admin/departments?error=InvalidID";
         }
         try {
-            departmentRepository.deleteById(id);
+            departmentRepository.deleteById(safeId);
         } catch (Exception e) {
             return "redirect:/admin/departments?error=ConstraintViolation";
         }

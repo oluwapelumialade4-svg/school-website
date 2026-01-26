@@ -83,19 +83,36 @@ public class LecturerController {
     }
 
     @GetMapping("/assignment/create")
-    public String createAssignmentForm(Model model) {
+    public String createAssignmentForm(Model model, Principal principal) {
+        String username = principal.getName();
+        User lecturer = userService.findByUsername(username).orElseThrow();
+
+        List<Course> courses = courseRepository.findAll().stream()
+                .filter(c -> c.getLecturer() != null && c.getLecturer().getId().equals(lecturer.getId()))
+                .collect(Collectors.toList());
+
+        model.addAttribute("courses", courses);
         model.addAttribute("assignment", new Assignment());
         return "lecturer/create-assignment";
     }
 
     @PostMapping("/assignment/create")
-    public String createAssignment(@ModelAttribute Assignment assignment, Principal principal) {
+    public String createAssignment(@ModelAttribute Assignment assignment, @RequestParam Long courseId, Principal principal) {
         String username = principal.getName();
         User lecturer = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
+        Course course = courseRepository.findById(courseId).orElseThrow();
+
+        // Validation: Ensure the lecturer is assigned to this course
+        if (course.getLecturer() == null || !course.getLecturer().getId().equals(lecturer.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to create assignments for this course.");
+        }
+
         assignment.setCreatedBy(lecturer);
-        assignment.setDepartment(lecturer.getDepartment());
+        assignment.setDepartment(course.getDepartment());
+        assignment.setCourse(course);
+        // Level is bound automatically from the form via @ModelAttribute
         assignmentService.createAssignment(assignment);
         return "redirect:/lecturer/dashboard?created";
     }

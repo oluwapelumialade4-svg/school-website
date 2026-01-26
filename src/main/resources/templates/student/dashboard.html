@@ -90,7 +90,7 @@
             <div class="col-md-4 mb-3" th:each="assignment : ${assignments}">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title" th:text="${assignment.title}">Assignment Title</h5>
+                        <h5 class="card-title" th:text="${(assignment.course != null ? assignment.course.courseCode + ' - ' : '') + assignment.title}">Assignment Title</h5>
                         <p class="card-text text-truncate" th:text="${assignment.description}">Description...</p>
                         <p class="card-text"><small class="text-muted">Due: <span th:text="${assignment.dueDate}">Date</span></small></p>
                         <a th:if="${!submittedAssignmentIds.contains(assignment.id)}" th:href="@{/student/assignment/{id}(id=${assignment.id})}" class="btn btn-primary">View & Submit</a>

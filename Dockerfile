@@ -7,15 +7,20 @@ WORKDIR /app
 
 # Copy pom.xml first for better layer caching
 COPY pom.xml .
+# Copy Maven wrapper and settings so wrapper runs inside container
+COPY mvnw .
+COPY mvnw.cmd .
+COPY .mvn .mvn
+RUN chmod +x mvnw
 
-# Download dependencies
-RUN mvn dependency:go-offline -B
+# Download dependencies using the wrapper
+RUN ./mvnw dependency:go-offline -B
 
 # Copy source code
 COPY src ./src
 
-# Build the application
-RUN mvn clean package -DskipTests
+# Build the application using the Maven wrapper
+RUN ./mvnw clean package -DskipTests
 
 # Phase 2: Runtime Stage
 FROM eclipse-temurin:17-jre-alpine

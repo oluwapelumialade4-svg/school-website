@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,6 +14,10 @@ import siwes.project.school_website.entity.User;
 import siwes.project.school_website.repository.AssignmentRepository;
 import siwes.project.school_website.repository.CourseRepository;
 import siwes.project.school_website.repository.UserRepository;
+import siwes.project.school_website.repository.NotificationRepository;
+import siwes.project.school_website.repository.CourseMaterialRepository;
+import siwes.project.school_website.repository.ClassScheduleRepository;
+import siwes.project.school_website.repository.ForumPostRepository;
 
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -20,6 +26,8 @@ import java.nio.file.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/student")
@@ -29,6 +37,10 @@ public class StudentController {
     private final AssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
+    private final NotificationRepository notificationRepository;
+    private final CourseMaterialRepository courseMaterialRepository;
+    private final ClassScheduleRepository classScheduleRepository;
+    private final ForumPostRepository forumPostRepository;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
@@ -43,9 +55,13 @@ public class StudentController {
         System.out.println("DEBUG: Level: " + student.getLevel());
 
         model.addAttribute("user", student);
-        // Fetch assignments matching the student's department and level
-        model.addAttribute("assignments", assignmentRepository.findByDepartment_NameIgnoreCaseAndLevel(student.getDepartment().getName(), student.getLevel()));
+        
+        String level = (student.getLevel() != null) ? student.getLevel() : "";
+
+        // Fetch assignments matching the student's Department entity and level (case-insensitive ensured by using the entity)
+        model.addAttribute("assignments", assignmentRepository.findByDepartmentAndLevel(student.getDepartment(), level));
         model.addAttribute("courses", student.getRegisteredCourses());
+        model.addAttribute("notifications", notificationRepository.findByRecipientOrderByTimestampDesc(student));
 
         return "student/dashboard";
     }
@@ -55,10 +71,16 @@ public class StudentController {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
         
+        if (student.getDepartment() == null) {
+            model.addAttribute("courses", Collections.emptyList());
+            model.addAttribute("student", student);
+            return "student/register-course";
+        }
+
         // Fetch all courses in the student's department
         // Note: Assuming findByDepartment exists or filtering manually
         List<Course> departmentCourses = courseRepository.findAll().stream()
-                .filter(c -> c.getDepartment().getId().equals(student.getDepartment().getId()))
+                .filter(c -> c.getDepartment() != null && c.getDepartment().getId().equals(student.getDepartment().getId()))
                 .collect(Collectors.toList());
 
         model.addAttribute("courses", departmentCourses);
@@ -70,7 +92,8 @@ public class StudentController {
     public String registerCourse(@RequestParam Long courseId, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
-        Course course = courseRepository.findById(courseId).orElseThrow();
+        Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeCourseId).orElseThrow();
 
         // Calculate current total credit units
         int currentUnits = student.getRegisteredCourses().stream()
@@ -93,7 +116,8 @@ public class StudentController {
     public String dropCourse(@RequestParam Long courseId, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
-        Course course = courseRepository.findById(courseId).orElseThrow();
+        Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeCourseId).orElseThrow();
 
         if (student.getRegisteredCourses().contains(course)) {
             student.getRegisteredCourses().remove(course);
@@ -111,17 +135,15 @@ public class StudentController {
     }
 
     @PostMapping("/profile")
-    public String updateProfile(@RequestParam String fullName,
-                                @RequestParam String email,
-                                @RequestParam String phoneNumber,
+    public String updateProfile(@ModelAttribute User formData,
                                 @RequestParam(required = false) MultipartFile file,
                                 Principal principal) throws IOException {
         String username = principal.getName();
         User user = userRepository.findByUsername(username).orElseThrow();
 
-        user.setFullName(fullName);
-        user.setEmail(email);
-        user.setPhoneNumber(phoneNumber);
+        user.setFullName(formData.getFullName());
+        user.setEmail(formData.getEmail());
+        user.setPhoneNumber(formData.getPhoneNumber());
 
         if (file != null && !file.isEmpty()) {
             String filename = System.currentTimeMillis() + "_profile_" + file.getOriginalFilename();
@@ -131,5 +153,32 @@ public class StudentController {
 
         userRepository.save(user);
         return "redirect:/student/profile?success";
+    }
+
+    @GetMapping("/course/{id}/materials")
+    public String viewCourseMaterials(@PathVariable Long id, Model model) {
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeId).orElseThrow();
+        model.addAttribute("course", course);
+        model.addAttribute("materials", courseMaterialRepository.findByCourse(course));
+        return "student/course-materials";
+    }
+
+    @GetMapping("/course/{id}/schedule")
+    public String viewClassSchedule(@PathVariable Long id, Model model) {
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeId).orElseThrow();
+        model.addAttribute("course", course);
+        model.addAttribute("schedules", classScheduleRepository.findByCourse(course));
+        return "student/class-schedule";
+    }
+
+    @GetMapping("/course/{id}/forum")
+    public String viewCourseForum(@PathVariable Long id, Model model) {
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+        Course course = courseRepository.findById(safeId).orElseThrow();
+        model.addAttribute("course", course);
+        model.addAttribute("posts", forumPostRepository.findByCourseOrderByTimestampDesc(course));
+        return "student/course-forum";
     }
 }
