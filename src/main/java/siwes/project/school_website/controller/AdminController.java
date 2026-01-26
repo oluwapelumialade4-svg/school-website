@@ -68,7 +68,10 @@ public class AdminController {
         }
         
         model.addAttribute("departments", departmentRepository.findAll());
-        model.addAttribute("courses", courseRepository.findAll());
+        
+        List<Course> courses = courseRepository.findAll();
+        System.out.println("DEBUG: Admin Dashboard - Courses found: " + courses.size());
+        model.addAttribute("courses", courses);
 
         return "admin/dashboard";
     }

@@ -15,4 +15,7 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
     // Fetch assignments by department and level
     List<Assignment> findByDepartmentAndLevel(Department department, String level);
+
+    // Case-Insensitive fetch by Department Name and Level
+    List<Assignment> findByDepartment_NameIgnoreCaseAndLevel(String departmentName, String level);
 }

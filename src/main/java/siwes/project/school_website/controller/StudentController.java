@@ -36,9 +36,15 @@ public class StudentController {
         User student = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Debug Logging for Render
+        System.out.println("DEBUG: Student Dashboard Accessed");
+        System.out.println("DEBUG: Student: " + student.getUsername());
+        System.out.println("DEBUG: Department: " + (student.getDepartment() != null ? student.getDepartment().getName() : "N/A"));
+        System.out.println("DEBUG: Level: " + student.getLevel());
+
         model.addAttribute("user", student);
         // Fetch assignments matching the student's department and level
-        model.addAttribute("assignments", assignmentRepository.findByDepartmentAndLevel(student.getDepartment(), student.getLevel()));
+        model.addAttribute("assignments", assignmentRepository.findByDepartment_NameIgnoreCaseAndLevel(student.getDepartment().getName(), student.getLevel()));
         model.addAttribute("courses", student.getRegisteredCourses());
 
         return "student/dashboard";
