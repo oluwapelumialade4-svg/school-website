@@ -120,4 +120,8 @@ public class SubmissionService {
         }
         return Optional.empty();
     }
+
+    public Optional<Submission> getSubmissionByStudentAndAssignment(User student, Assignment assignment) {
+        return submissionRepository.findByStudentAndAssignment(student, assignment);
+    }
 }

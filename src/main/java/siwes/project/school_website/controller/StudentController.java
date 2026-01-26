@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import siwes.project.school_website.entity.Course;
 import siwes.project.school_website.entity.User;
+import siwes.project.school_website.entity.Assignment;
+import siwes.project.school_website.entity.Submission;
 import siwes.project.school_website.repository.AssignmentRepository;
 import siwes.project.school_website.repository.CourseRepository;
 import siwes.project.school_website.repository.UserRepository;
@@ -18,6 +20,7 @@ import siwes.project.school_website.repository.NotificationRepository;
 import siwes.project.school_website.repository.CourseMaterialRepository;
 import siwes.project.school_website.repository.ClassScheduleRepository;
 import siwes.project.school_website.repository.ForumPostRepository;
+import siwes.project.school_website.service.SubmissionService;
 
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -28,6 +31,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.Optional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 
 @Controller
 @RequestMapping("/student")
@@ -41,6 +50,7 @@ public class StudentController {
     private final CourseMaterialRepository courseMaterialRepository;
     private final ClassScheduleRepository classScheduleRepository;
     private final ForumPostRepository forumPostRepository;
+    private final SubmissionService submissionService;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
@@ -55,11 +65,19 @@ public class StudentController {
         System.out.println("DEBUG: Level: " + student.getLevel());
 
         model.addAttribute("user", student);
+        model.addAttribute("username", student.getFullName());
         
         String level = (student.getLevel() != null) ? student.getLevel() : "";
 
         // Fetch assignments matching the student's Department entity and level (case-insensitive ensured by using the entity)
         model.addAttribute("assignments", assignmentRepository.findByDepartmentAndLevel(student.getDepartment(), level));
+        
+        // Get submitted assignment IDs
+        List<Long> submittedAssignmentIds = submissionService.getSubmissionsForStudent(student).stream()
+                .map(sub -> sub.getAssignment().getId())
+                .collect(Collectors.toList());
+        model.addAttribute("submittedAssignmentIds", submittedAssignmentIds);
+        
         model.addAttribute("courses", student.getRegisteredCourses());
         model.addAttribute("notifications", notificationRepository.findByRecipientOrderByTimestampDesc(student));
 
@@ -185,5 +203,88 @@ public class StudentController {
         model.addAttribute("course", course);
         model.addAttribute("posts", forumPostRepository.findByCourseOrderByTimestampDesc(course));
         return "student/course-forum";
+    }
+
+    @GetMapping("/assignment/{id}")
+    public String viewAssignment(@PathVariable Long id, Model model, Principal principal) {
+        String username = principal.getName();
+        User student = userRepository.findByUsername(username).orElseThrow();
+
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
+        Assignment assignment = assignmentRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
+
+        // Check if assignment matches student's department and level
+        if (!assignment.getDepartment().equals(student.getDepartment()) || !assignment.getLevel().equals(student.getLevel())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        model.addAttribute("assignment", assignment);
+
+        // Check if already submitted
+        Optional<Submission> existingSubmission = submissionService.getSubmissionByStudentAndAssignment(student, assignment);
+        model.addAttribute("submitted", existingSubmission.isPresent());
+        if (existingSubmission.isPresent()) {
+            model.addAttribute("submission", existingSubmission.get());
+        }
+
+        return "student/assignment-view";
+    }
+
+    @GetMapping("/assignment/{id}/submit")
+    public String submitAssignment(@PathVariable Long id, @RequestParam MultipartFile file, Principal principal) throws IOException {
+        String username = principal.getName();
+        User student = userRepository.findByUsername(username).orElseThrow();
+
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
+        Assignment assignment = assignmentRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
+
+        // Check access
+        if (!assignment.getDepartment().equals(student.getDepartment()) || !assignment.getLevel().equals(student.getLevel())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        if (file.isEmpty()) {
+            return "redirect:/student/assignment/" + id + "?error=FileRequired";
+        }
+
+        submissionService.submitAssignment(assignment.getId(), username, file);
+
+        return "redirect:/student/assignment/" + id + "?success";
+    }
+
+    @GetMapping("/material/{id}/download")
+    public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id) throws IOException {
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Material ID cannot be null"));
+        // Assuming CourseMaterialRepository is injected, but it's not. Wait, in the code, it's courseMaterialRepository
+        // But in StudentController, it is injected.
+        var material = courseMaterialRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Material not found"));
+        Path filePath = Paths.get(material.getFilePath());
+        Resource resource = new UrlResource(filePath.toUri());
+        if (resource.exists() && resource.isReadable()) {
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFileName() + "\"")
+                    .body(resource);
+        } else {
+            throw new RuntimeException("Could not read file: " + material.getOriginalFileName());
+        }
+    }
+
+    @GetMapping("/submission/{id}/download")
+    public ResponseEntity<Resource> downloadSubmission(@PathVariable Long id, Principal principal) {
+        String username = principal.getName();
+        User student = userRepository.findByUsername(username).orElseThrow();
+
+        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Submission ID cannot be null"));
+        Submission submission = submissionService.getSubmissionById(safeId);
+
+        // Ensure the submission belongs to the student
+        if (!submission.getStudent().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        Resource file = submissionService.loadFileAsResource(submission.getSubmissionContent());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + submission.getSubmissionContent() + "\"")
+                .body(file);
     }
 }

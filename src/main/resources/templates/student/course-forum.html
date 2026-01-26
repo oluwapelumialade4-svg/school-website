@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Course Forum</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="#">School Portal (Student)</a>
+            <div class="d-flex align-items-center text-white">
+                <a th:href="@{/student/dashboard}" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h3>Forum for <span th:text="${course.courseCode}">CODE</span></h3>
+
+        <div class="card shadow-sm mt-3">
+            <div class="card-header">
+                <h5>Discussion Posts</h5>
+            </div>
+            <div class="card-body">
+                <div th:each="post : ${posts}" class="mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 th:text="${post.title}">Post Title</h6>
+                            <p th:text="${post.content}">Post content...</p>
+                            <small class="text-muted">Posted by <span th:text="${post.author.fullName}">Author</span> on <span th:text="${#temporals.format(post.timestamp, 'dd-MM-yyyy HH:mm')}">Date</span></small>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(posts)}" class="alert alert-info">
+                    No posts yet. Be the first to start a discussion!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
