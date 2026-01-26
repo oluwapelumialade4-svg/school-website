@@ -135,7 +135,7 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        Optional.ofNullable(id).ifPresent(userRepository::deleteById);
     }
 
     public List<Department> getAllDepartments() {
