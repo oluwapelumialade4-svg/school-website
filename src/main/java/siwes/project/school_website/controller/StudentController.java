@@ -295,3 +295,4 @@ public class StudentController {
         model.addAttribute("assignments", assignments);
         return "test";
     }
+}
