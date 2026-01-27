@@ -35,7 +35,6 @@ public class SubmissionService {
     private final Path rootLocation = Paths.get("uploads");
 
     public void submitAssignment(Long assignmentId, String username, MultipartFile file) throws IOException {
-        @SuppressWarnings("null")
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
 
@@ -69,19 +68,19 @@ public class SubmissionService {
         submissionRepository.save(submission);
     }
 
+    @SuppressWarnings("null")
     public List<Submission> getSubmissionsForAssignment(Long assignmentId) {
-        @SuppressWarnings("null")
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
         return submissionRepository.findByAssignment(assignment);
     }
 
+    @SuppressWarnings("null")
     public List<Submission> getSubmissionsForStudent(User student) {
         return submissionRepository.findByStudent(student);
     }
 
     public void gradeSubmission(Long submissionId, Integer grade, String feedback) {
-        @SuppressWarnings("null")
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
 
@@ -90,8 +89,8 @@ public class SubmissionService {
         submissionRepository.save(submission);
     }
 
+    @SuppressWarnings("null")
     public Submission getSubmissionById(Long id) {
-        @SuppressWarnings("null")
         Submission result = submissionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
         return result;
@@ -113,7 +112,6 @@ public class SubmissionService {
     }
 
     public Optional<Submission> getSubmission(Long id, String username) {
-        @SuppressWarnings("null")
         Assignment assignment = assignmentRepository.findById(id).orElse(null);
         User student = userRepository.findByUsername(username).orElse(null);
         if (assignment != null && student != null) {

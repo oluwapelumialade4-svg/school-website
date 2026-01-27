@@ -1,10 +1,11 @@
 package siwes.project.school_website.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
@@ -18,12 +19,13 @@ public class Assignment {
     private Long id;
 
     @Column(nullable = false)
+    @NotBlank(message = "Title cannot be blank")
     private String title;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @NotNull(message = "Due date cannot be null")
     private LocalDate dueDate;
 
     private String level;

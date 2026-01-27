@@ -6,7 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
 import siwes.project.school_website.entity.Assignment;
 import siwes.project.school_website.entity.Submission;
 import siwes.project.school_website.entity.Course;
@@ -15,6 +15,7 @@ import siwes.project.school_website.repository.CourseRepository;
 import siwes.project.school_website.service.AssignmentService;
 import siwes.project.school_website.service.SubmissionService;
 import siwes.project.school_website.service.UserService;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -23,11 +24,10 @@ import java.util.Objects;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
+import jakarta.validation.Valid;
 
 @Controller
-@RequestMapping("/lecturer")
 @RequiredArgsConstructor
 public class LecturerController {
 
@@ -36,12 +36,15 @@ public class LecturerController {
     private final UserService userService;
     private final CourseRepository courseRepository;
 
-    @GetMapping("/dashboard")
+    @GetMapping("/lecturer/dashboard")
+    @SuppressWarnings("null")
     public String dashboard(Model model, Principal principal) {
         String username = principal != null ? principal.getName() : "Lecturer";
         User lecturer = userService.findByUsername(username).orElseThrow();
 
-        model.addAttribute("assignments", assignmentService.getAllAssignments());
+        List<Assignment> assignments = assignmentService.getAllAssignments();
+
+        model.addAttribute("assignments", assignments);
         model.addAttribute("username", username);
         
         // Filter courses taught by this lecturer
@@ -53,11 +56,13 @@ public class LecturerController {
         return "lecturer/dashboard";
     }
 
-    @GetMapping("/assignment/{id}/submissions")
+    @GetMapping("/lecturer/assignment/{id}/submissions")
+    @SuppressWarnings("null")
     public String viewSubmissions(@PathVariable Long id, Model model, Principal principal) {
-        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
-        Objects.requireNonNull(safeId, "Assignment ID must not be null");
-        Assignment assignment = assignmentService.getAssignmentById(safeId)
+        if (id == null) {
+            throw new IllegalArgumentException("Assignment ID cannot be null");
+        }
+        Assignment assignment = assignmentService.getAssignmentById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
         
         // Ownership Protection: Only the creator can view submissions
@@ -70,25 +75,30 @@ public class LecturerController {
         return "lecturer/assignment-submissions";
     }
 
-    @GetMapping("/submission/{id}")
+    @GetMapping("/lecturer/submission/{id}")
     public String gradeSubmissionView(@PathVariable Long id, Model model) {
-        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Submission ID cannot be null"));
-        Submission submission = submissionService.getSubmissionById(safeId);
+        if (id == null) {
+            throw new IllegalArgumentException("Submission ID cannot be null");
+        }
+        Submission submission = submissionService.getSubmissionById(id);
         model.addAttribute("submission", submission);
         return "lecturer/grading-view";
     }
 
-    @PostMapping("/submission/{id}/grade")
+    @PostMapping("/lecturer/submission/{id}/grade")
     public String gradeSubmission(@PathVariable Long id, @RequestParam Integer grade, @RequestParam String feedback) {
-        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Submission ID cannot be null"));
-        submissionService.gradeSubmission(safeId, grade, feedback);
+        if (id == null) {
+            throw new IllegalArgumentException("Submission ID cannot be null");
+        }
+        submissionService.gradeSubmission(id, grade, feedback);
 
         // Redirect back to the assignment's submission list
-        Submission submission = submissionService.getSubmissionById(safeId);
+        Submission submission = submissionService.getSubmissionById(id);
         return "redirect:/lecturer/assignment/" + submission.getAssignment().getId() + "/submissions?graded";
     }
 
-    @GetMapping("/assignment/create")
+    @GetMapping("/lecturer/assignment/create")
+    @SuppressWarnings("null")
     public String createAssignmentForm(Model model, Principal principal) {
         String username = principal.getName();
         User lecturer = userService.findByUsername(username).orElseThrow();
@@ -102,33 +112,56 @@ public class LecturerController {
         return "lecturer/create-assignment";
     }
 
-    @PostMapping("/assignment/create")
+    @PostMapping("/lecturer/assignment/create")
     @SuppressWarnings("null")
-    public String createAssignment(@ModelAttribute Assignment assignment, @RequestParam Long courseId, Principal principal) {
+    public String createAssignment(@Valid @ModelAttribute Assignment assignment, 
+                                   BindingResult bindingResult,
+                                   @RequestParam(required = false) Long courseId, 
+                                   @RequestParam(defaultValue = "publish") String action,
+                                   Principal principal,
+                                   Model model) {
+        if (bindingResult.hasErrors()) {
+            // Reload courses for the form
+            String username = principal.getName();
+            User lecturer = userService.findByUsername(username).orElseThrow();
+            List<Course> courses = courseRepository.findAll().stream()
+                    .filter(c -> c.getLecturer() != null && c.getLecturer().getId().equals(lecturer.getId()))
+                    .collect(Collectors.toList());
+            model.addAttribute("courses", courses);
+            return "lecturer/create-assignment";
+        }
+
         try {
+            if (courseId == null) {
+                return "redirect:/lecturer/assignment/create?error=Please select a valid course";
+            }
+
             String username = principal.getName();
             User lecturer = userService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-            Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
-            Course course = courseRepository.findById(safeCourseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
+            Course course = courseRepository.findById(courseId).orElse(null);
+            if (course == null) {
+                return "redirect:/lecturer/assignment/create?error=Invalid Course Selected";
+            }
 
             // Validation: Ensure the lecturer is assigned to this course
-            if (course.getLecturer() == null || !course.getLecturer().getId().equals(lecturer.getId())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to create assignments for this course.");
+            if (course.getLecturer() == null || !Objects.equals(course.getLecturer().getId(), lecturer.getId())) {
+                return "redirect:/lecturer/dashboard?error=You are not authorized to create assignments for this course.";
             }
 
             // Additional validation
             if (assignment.getTitle() == null || assignment.getTitle().trim().isEmpty()) {
-                throw new IllegalArgumentException("Assignment title cannot be empty");
+                return "redirect:/lecturer/assignment/create?error=Assignment title cannot be empty";
             }
             if (assignment.getDueDate() == null) {
-                throw new IllegalArgumentException("Due date cannot be null");
+                return "redirect:/lecturer/assignment/create?error=Due date cannot be null";
             }
 
             assignment.setCreatedBy(lecturer);
             assignment.setDepartment(course.getDepartment());
             assignment.setCourse(course);
+            
             // Level is bound automatically from the form via @ModelAttribute
             assignmentService.createAssignment(assignment);
             return "redirect:/lecturer/dashboard?created";
@@ -140,26 +173,52 @@ public class LecturerController {
         }
     }
 
-    @GetMapping("/submission/{id}/download")
+    @PostMapping("/lecturer/assignment/update")
+    @SuppressWarnings("null")
+    public String updateAssignment(@RequestParam Long id,
+                                   @ModelAttribute Assignment formData,
+                                   @RequestParam(required = false) String action,
+                                   Principal principal) {
+        String username = principal.getName();
+        Assignment assignment = assignmentService.getAssignmentById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
+
+        if (!assignment.getCreatedBy().getUsername().equals(username)) {
+            return "redirect:/lecturer/dashboard?error=Unauthorized";
+        }
+
+        assignment.setTitle(formData.getTitle());
+        assignment.setDescription(formData.getDescription());
+        assignment.setDueDate(formData.getDueDate());
+
+        assignmentService.createAssignment(assignment); // Saves the updated entity
+        return "redirect:/lecturer/dashboard?updated";
+    }
+
+    @GetMapping("/lecturer/submission/{id}/download")
     public ResponseEntity<Resource> downloadSubmission(@PathVariable Long id) {
-        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Submission ID cannot be null"));
-        Submission submission = submissionService.getSubmissionById(safeId);
+        if (id == null) {
+            throw new IllegalArgumentException("Submission ID cannot be null");
+        }
+        Submission submission = submissionService.getSubmissionById(id);
         Resource file = submissionService.loadFileAsResource(submission.getSubmissionContent());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
                 .body(file);
     }
 
-    @GetMapping("/student/{id}")
+    @GetMapping("/lecturer/student/{id}")
     public String viewStudentProfile(@PathVariable Long id, Model model) {
-        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Student ID cannot be null"));
-        User student = userService.findById(safeId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid student Id:" + safeId));
+        if (id == null) {
+            throw new IllegalArgumentException("Student ID cannot be null");
+        }
+        User student = userService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid student Id:" + id));
         model.addAttribute("student", student);
         return "lecturer/student-profile";
     }
 
-    @GetMapping("/profile-pic/{filename}")
+    @GetMapping("/lecturer/profile-pic/{filename}")
     @ResponseBody
     public ResponseEntity<Resource> getProfilePic(@PathVariable String filename) {
         Resource file = userService.loadProfilePic(filename);
@@ -168,7 +227,8 @@ public class LecturerController {
                 .body(file);
     }
 
-    @GetMapping("/profile")
+    @GetMapping("/lecturer/profile")
+    @SuppressWarnings("null")
     public String editProfile(Model model, Principal principal) {
         String username = principal.getName();
         User user = userService.findByUsername(username).orElseThrow();
@@ -176,7 +236,7 @@ public class LecturerController {
         return "lecturer/profile";
     }
 
-    @PostMapping("/profile")
+    @PostMapping("/lecturer/profile")
     public String updateProfile(@RequestParam String fullName,
                                 @RequestParam String email,
                                 @RequestParam String phoneNumber,
@@ -188,22 +248,35 @@ public class LecturerController {
         return "redirect:/lecturer/profile?success";
     }
 
-    @GetMapping("/assignment/delete/{id}")
+    @GetMapping("/lecturer/assignment/delete/{id}")
     public String deleteAssignment(@PathVariable Long id) {
-        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
-        assignmentService.deleteAssignment(safeId);
+        if (id == null) {
+            throw new IllegalArgumentException("Assignment ID cannot be null");
+        }
+        assignmentService.deleteAssignment(id);
         return "redirect:/lecturer/dashboard?deleted";
     }
 
-    @GetMapping("/course/{id}/students")
-    @SuppressWarnings("null")
+    @PostMapping("/lecturer/assignment/delete-bulk")
+    public String deleteBulkAssignments(@RequestParam(required = false) List<Long> ids) {
+        if (ids != null && !ids.isEmpty()) {
+            for (Long id : ids) {
+                assignmentService.deleteAssignment(id);
+            }
+        }
+        return "redirect:/lecturer/dashboard?deleted";
+    }
+
+    @GetMapping("/lecturer/course/{id}/students")
     public String viewEnrolledStudents(@PathVariable Long id, Model model) {
-        Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
-        Course course = courseRepository.findById(safeId)
+        if (id == null) {
+            throw new IllegalArgumentException("Course ID cannot be null");
+        }
+        Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
 
         List<User> students = userService.getStudentsByDepartment(course.getDepartment());
-        
+
         model.addAttribute("course", course);
         model.addAttribute("students", students);
         return "course-students";

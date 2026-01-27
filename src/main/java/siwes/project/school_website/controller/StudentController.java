@@ -48,6 +48,7 @@ public class StudentController {
     private final SubmissionService submissionService;
 
     @GetMapping("/dashboard")
+    @SuppressWarnings("null")
     public String dashboard(Model model, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username)
@@ -64,9 +65,9 @@ public class StudentController {
         
         String level = (student.getLevel() != null) ? student.getLevel() : "";
 
-        // Fetch assignments matching the student's Department entity and level (case-insensitive ensured by using the entity)
+        // Fetch assignments matching the student's Department name (case-insensitive) and level
         List<Assignment> assignments = (student.getDepartment() != null) ? 
-            assignmentRepository.findByDepartmentAndLevel(student.getDepartment(), level) : 
+            assignmentRepository.findByDepartment_NameIgnoreCaseAndLevel(student.getDepartment().getName(), level) : 
             Collections.emptyList();
         model.addAttribute("assignments", assignments);
         
@@ -105,7 +106,6 @@ public class StudentController {
     }
 
     @PostMapping("/course/register")
-    @SuppressWarnings("null")
     public String registerCourse(@RequestParam Long courseId, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
@@ -130,7 +130,6 @@ public class StudentController {
     }
 
     @PostMapping("/course/drop")
-    @SuppressWarnings("null")
     public String dropCourse(@RequestParam Long courseId, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
@@ -174,7 +173,6 @@ public class StudentController {
     }
 
     @GetMapping("/course/{id}/materials")
-    @SuppressWarnings("null")
     public String viewCourseMaterials(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(safeId).orElseThrow();
@@ -184,7 +182,6 @@ public class StudentController {
     }
 
     @GetMapping("/course/{id}/schedule")
-    @SuppressWarnings("null")
     public String viewClassSchedule(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(safeId).orElseThrow();
@@ -194,7 +191,6 @@ public class StudentController {
     }
 
     @GetMapping("/course/{id}/forum")
-    @SuppressWarnings("null")
     public String viewCourseForum(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(safeId).orElseThrow();
@@ -204,7 +200,6 @@ public class StudentController {
     }
 
     @GetMapping("/assignment/{id}")
-    @SuppressWarnings("null")
     public String viewAssignment(@PathVariable Long id, Model model, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
@@ -213,7 +208,7 @@ public class StudentController {
         Assignment assignment = assignmentRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
 
         // Check if assignment matches student's department and level
-        if (!assignment.getDepartment().equals(student.getDepartment()) || !assignment.getLevel().equals(student.getLevel())) {
+        if (student.getDepartment() == null || !student.getDepartment().equals(assignment.getDepartment()) || !assignment.getLevel().equals(student.getLevel())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
@@ -229,7 +224,8 @@ public class StudentController {
         return "student/assignment-view";
     }
 
-    @GetMapping("/assignment/{id}/submit")    @SuppressWarnings("null")    public String submitAssignment(@PathVariable Long id, @RequestParam MultipartFile file, Principal principal) throws IOException {
+    @PostMapping("/assignment/{id}/submit")
+    public String submitAssignment(@PathVariable Long id, @RequestParam MultipartFile file, Principal principal) throws IOException {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
 
@@ -237,7 +233,7 @@ public class StudentController {
         Assignment assignment = assignmentRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
 
         // Check access
-        if (!assignment.getDepartment().equals(student.getDepartment()) || !assignment.getLevel().equals(student.getLevel())) {
+        if (student.getDepartment() == null || !student.getDepartment().equals(assignment.getDepartment()) || !assignment.getLevel().equals(student.getLevel())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
@@ -251,7 +247,6 @@ public class StudentController {
     }
 
     @GetMapping("/material/{id}/download")
-    @SuppressWarnings("null")
     public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id) throws IOException {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Material ID cannot be null"));
         // Assuming CourseMaterialRepository is injected, but it's not. Wait, in the code, it's courseMaterialRepository
@@ -269,7 +264,6 @@ public class StudentController {
     }
 
     @GetMapping("/submission/{id}/download")
-    @SuppressWarnings("null")
     public ResponseEntity<Resource> downloadSubmission(@PathVariable Long id, Principal principal) {
         String username = principal.getName();
 

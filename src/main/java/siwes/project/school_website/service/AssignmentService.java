@@ -17,30 +17,38 @@ public class AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
 
+    @SuppressWarnings("null")
     public List<Assignment> getAllAssignments() {
         return assignmentRepository.findAll();
     }
 
+    @SuppressWarnings("null")
     public List<Assignment> getAssignmentsByDepartment(Department department) {
+        if (department == null) {
+            throw new IllegalArgumentException("Department cannot be null");
+        }
         return assignmentRepository.findByCourse_Department(department);
     }
 
+    @SuppressWarnings("null")
     public List<Assignment> getAssignmentsByDepartmentAndLevel(Department department, String level) {
+        if (department == null) {
+            throw new IllegalArgumentException("Department cannot be null");
+        }
+        if (level == null || level.trim().isEmpty()) {
+            throw new IllegalArgumentException("Level cannot be null or empty");
+        }
         return assignmentRepository.findByDepartmentAndLevel(department, level);
     }
 
-    @SuppressWarnings("null")
     public void createAssignment(Assignment assignment) {
         assignmentRepository.save(assignment);
     }
 
     public Optional<Assignment> getAssignmentById(Long id) {
-        @SuppressWarnings("null")
-        Optional<Assignment> result = assignmentRepository.findById(id);
-        return result;
+        return assignmentRepository.findById(id);
     }
 
-    @SuppressWarnings("null")
     public void deleteAssignment(Long id) {
         assignmentRepository.deleteById(id);
     }

@@ -49,6 +49,7 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/dashboard")
+    @SuppressWarnings("null")
     public String dashboard(@RequestParam(required = false) Role role, 
                             @RequestParam(defaultValue = "0") int page,
                             @RequestParam(defaultValue = "5") int size,
@@ -211,7 +212,6 @@ public class AdminController {
     }
 
     @GetMapping("/department/delete/{id}")
-    @SuppressWarnings("null")
     public String deleteDepartment(@PathVariable Long id) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Department ID cannot be null"));
         try {
@@ -223,6 +223,7 @@ public class AdminController {
     }
 
     @GetMapping("/profile")
+    @SuppressWarnings("null")
     public String editProfile(Model model, Principal principal) {
         String username = principal.getName();
         User user = userService.findByUsername(username).orElseThrow();
@@ -231,6 +232,7 @@ public class AdminController {
     }
 
     @PostMapping("/profile")
+    @SuppressWarnings("null")
     public String updateProfile(@RequestParam String fullName,
                                 @RequestParam String email,
                                 @RequestParam String phoneNumber,

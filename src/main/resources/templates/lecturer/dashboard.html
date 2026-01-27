@@ -69,15 +69,73 @@
                         <a href="/lecturer/assignment/create" class="btn btn-primary btn-sm">+ Create Assignment</a>
                     </div>
                     <div class="card-body">
+                        <!-- Bulk Delete Form Handler -->
+                        <form id="bulkDeleteForm" th:action="@{/lecturer/assignment/delete-bulk}" method="post" style="display: none;"></form>
+
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="me-2 fw-bold">Filter:</span>
+                                <a href="/lecturer/dashboard" class="btn btn-sm" th:classappend="${currentStatus == null} ? 'btn-primary' : 'btn-outline-secondary'">All</a>
+                                <a href="/lecturer/dashboard?status=DRAFT" class="btn btn-sm" th:classappend="${currentStatus == 'DRAFT'} ? 'btn-primary' : 'btn-outline-secondary'">Drafts</a>
+                                <a href="/lecturer/dashboard?status=PUBLISHED" class="btn btn-sm" th:classappend="${currentStatus == 'PUBLISHED'} ? 'btn-primary' : 'btn-outline-secondary'">Published</a>
+                            </div>
+                            <button type="submit" form="bulkDeleteForm" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete the selected assignments?')">Delete Selected</button>
+                        </div>
                         <div class="list-group">
                             <div th:each="assignment : ${assignments}" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1" th:text="${assignment.title}">Assignment Title</h5>
-                                    <small th:text="${assignment.dueDate}">Due Date</small>
+                                <div class="d-flex">
+                                    <div class="me-3 pt-2">
+                                        <input type="checkbox" name="ids" th:value="${assignment.id}" form="bulkDeleteForm" class="form-check-input">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">
+                                                <span th:text="${assignment.title}">Assignment Title</span>
+                                                <span th:if="${assignment.status == 'DRAFT'}" class="badge bg-secondary ms-2">Draft</span>
+                                                <span th:if="${assignment.status == 'PUBLISHED'}" class="badge bg-success ms-2">Published</span>
+                                            </h5>
+                                            <small th:text="${assignment.dueDate}">Due Date</small>
+                                        </div>
+                                        <p class="mb-1" th:text="${assignment.description}">Description</p>
+                                        <a th:href="@{/lecturer/assignment/{id}/submissions(id=${assignment.id})}" class="btn btn-sm btn-outline-primary mt-2">View Submissions</a>
+                                        <button class="btn btn-sm btn-outline-warning mt-2" data-bs-toggle="modal" th:data-bs-target="'#editAssignmentModal' + ${assignment.id}">Edit</button>
+                                        <a th:href="@{/lecturer/assignment/delete/{id}(id=${assignment.id})}" class="btn btn-sm btn-outline-danger mt-2" onclick="return confirm('Are you sure?')">Delete</a>
+
+                                        <!-- Edit Assignment Modal -->
+                                        <div class="modal fade" th:id="'editAssignmentModal' + ${assignment.id}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Edit Assignment</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <form th:action="@{/lecturer/assignment/update}" method="post">
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="id" th:value="${assignment.id}">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Title</label>
+                                                                <input type="text" class="form-control" name="title" th:value="${assignment.title}" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Description</label>
+                                                                <textarea class="form-control" name="description" rows="3" th:text="${assignment.description}"></textarea>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Due Date</label>
+                                                                <input type="date" class="form-control" name="dueDate" th:value="${assignment.dueDate}" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <button type="submit" name="action" value="save" class="btn btn-primary">Save Changes</button>
+                                                            <button th:if="${assignment.status == 'DRAFT'}" type="submit" name="action" value="publish" class="btn btn-success" onclick="return confirm('Are you sure you want to publish this assignment? It will be visible to students immediately.')">Publish Now</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p class="mb-1" th:text="${assignment.description}">Description</p>
-                                <a th:href="@{/lecturer/assignment/{id}/submissions(id=${assignment.id})}" class="btn btn-sm btn-outline-primary mt-2">View Submissions</a>
-                                <a th:href="@{/lecturer/assignment/delete/{id}(id=${assignment.id})}" class="btn btn-sm btn-outline-danger mt-2" onclick="return confirm('Are you sure?')">Delete</a>
                             </div>
                         </div>
                     </div>

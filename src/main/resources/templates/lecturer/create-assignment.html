@@ -19,6 +19,7 @@
                         <h4 class="mb-0">Create New Assignment</h4>
                     </div>
                     <div class="card-body">
+                        <div th:if="${param.error}" class="alert alert-danger" th:text="${param.error}"></div>
                         <form th:action="@{/lecturer/assignment/create}" th:object="${assignment}" method="post">
                             
                             <!-- Course Selection (Dropdown) -->
@@ -53,6 +54,7 @@
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title</label>
                                 <input type="text" id="title" th:field="*{title}" class="form-control" placeholder="e.g., Mid-Semester Project" required>
+                                <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-danger"></div>
                             </div>
 
                             <!-- Description -->
@@ -65,11 +67,13 @@
                             <div class="mb-3">
                                 <label for="dueDate" class="form-label">Due Date</label>
                                 <input type="date" id="dueDate" th:field="*{dueDate}" class="form-control" required>
+                                <div th:if="${#fields.hasErrors('dueDate')}" th:errors="*{dueDate}" class="text-danger"></div>
                             </div>
 
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary">Create Assignment</button>
-                                <a href="/lecturer/dashboard" class="btn btn-secondary">Cancel</a>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" name="action" value="draft" class="btn btn-secondary me-md-2">Save as Draft</button>
+                                <button type="submit" name="action" value="publish" class="btn btn-primary">Publish</button>
+                                <a href="/lecturer/dashboard" class="btn btn-outline-secondary">Cancel</a>
                             </div>
                         </form>
                     </div>

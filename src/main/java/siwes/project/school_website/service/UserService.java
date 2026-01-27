@@ -49,7 +49,6 @@ public class UserService {
         return userRepository.findByMatricNumber(matricNumber);
     }
 
-    @SuppressWarnings("null")
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
@@ -60,7 +59,6 @@ public class UserService {
             new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
-    @SuppressWarnings("null")
     public User save(User user) {
         return userRepository.save(user);
     }
@@ -111,7 +109,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    @SuppressWarnings("null")
     public Resource loadProfilePic(String filename) {
         try {
             Path file = rootLocation.resolve(filename);
@@ -174,7 +171,6 @@ public class UserService {
                 .filter(u -> u.getResetPasswordTokenExpiry().isAfter(LocalDateTime.now()));
     }
 
-    @SuppressWarnings("null")
     public Page<User> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable);
     }
