@@ -105,24 +105,39 @@ public class LecturerController {
     @PostMapping("/assignment/create")
     @SuppressWarnings("null")
     public String createAssignment(@ModelAttribute Assignment assignment, @RequestParam Long courseId, Principal principal) {
-        String username = principal.getName();
-        User lecturer = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+        try {
+            String username = principal.getName();
+            User lecturer = userService.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-        Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
-        Course course = courseRepository.findById(safeCourseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
+            Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
+            Course course = courseRepository.findById(safeCourseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
 
-        // Validation: Ensure the lecturer is assigned to this course
-        if (course.getLecturer() == null || !course.getLecturer().getId().equals(lecturer.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to create assignments for this course.");
+            // Validation: Ensure the lecturer is assigned to this course
+            if (course.getLecturer() == null || !course.getLecturer().getId().equals(lecturer.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to create assignments for this course.");
+            }
+
+            // Additional validation
+            if (assignment.getTitle() == null || assignment.getTitle().trim().isEmpty()) {
+                throw new IllegalArgumentException("Assignment title cannot be empty");
+            }
+            if (assignment.getDueDate() == null) {
+                throw new IllegalArgumentException("Due date cannot be null");
+            }
+
+            assignment.setCreatedBy(lecturer);
+            assignment.setDepartment(course.getDepartment());
+            assignment.setCourse(course);
+            // Level is bound automatically from the form via @ModelAttribute
+            assignmentService.createAssignment(assignment);
+            return "redirect:/lecturer/dashboard?created";
+        } catch (Exception e) {
+            // Log the error and redirect with error message
+            System.err.println("Error creating assignment: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/lecturer/dashboard?error=" + e.getMessage();
         }
-
-        assignment.setCreatedBy(lecturer);
-        assignment.setDepartment(course.getDepartment());
-        assignment.setCourse(course);
-        // Level is bound automatically from the form via @ModelAttribute
-        assignmentService.createAssignment(assignment);
-        return "redirect:/lecturer/dashboard?created";
     }
 
     @GetMapping("/submission/{id}/download")

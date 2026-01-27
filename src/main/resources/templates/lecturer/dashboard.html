@@ -22,6 +22,7 @@
         <!-- Alerts -->
         <div th:if="${param.created}" class="alert alert-success">Assignment created successfully!</div>
         <div th:if="${param.deleted}" class="alert alert-success">Assignment deleted successfully!</div>
+        <div th:if="${param.error}" class="alert alert-danger" th:text="'Error: ' + ${param.error}">Error message</div>
 
         <div class="row">
             <!-- My Courses Section -->
