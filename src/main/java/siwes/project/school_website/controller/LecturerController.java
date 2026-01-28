@@ -37,17 +37,18 @@ public class LecturerController {
     private final CourseRepository courseRepository;
 
     @GetMapping("/lecturer/dashboard")
-    @SuppressWarnings("null")
     public String dashboard(Model model, Principal principal) {
-        String username = principal != null ? principal.getName() : "Lecturer";
+        String username = principal.getName();
         User lecturer = userService.findByUsername(username).orElseThrow();
 
-        List<Assignment> assignments = assignmentService.getAllAssignments();
+        // Get only assignments created by this lecturer
+        List<Assignment> assignments = assignmentService.getAllAssignments().stream()
+                .filter(a -> a.getCreatedBy() != null && a.getCreatedBy().getId().equals(lecturer.getId()))
+                .collect(Collectors.toList());
 
         model.addAttribute("assignments", assignments);
-        model.addAttribute("username", username);
+        model.addAttribute("username", lecturer.getFullName());
         
-        // Filter courses taught by this lecturer
         List<Course> myCourses = courseRepository.findAll().stream()
                 .filter(c -> c.getLecturer() != null && c.getLecturer().getId().equals(lecturer.getId()))
                 .collect(Collectors.toList());
@@ -98,7 +99,6 @@ public class LecturerController {
     }
 
     @GetMapping("/lecturer/assignment/create")
-    @SuppressWarnings("null")
     public String createAssignmentForm(Model model, Principal principal) {
         String username = principal.getName();
         User lecturer = userService.findByUsername(username).orElseThrow();
@@ -113,16 +113,15 @@ public class LecturerController {
     }
 
     @PostMapping("/lecturer/assignment/create")
-    @SuppressWarnings("null")
     public String createAssignment(@Valid @ModelAttribute Assignment assignment, 
                                    BindingResult bindingResult,
                                    @RequestParam(required = false) Long courseId, 
                                    @RequestParam(defaultValue = "publish") String action,
                                    Principal principal,
                                    Model model) {
+        String username = principal.getName();
+        
         if (bindingResult.hasErrors()) {
-            // Reload courses for the form
-            String username = principal.getName();
             User lecturer = userService.findByUsername(username).orElseThrow();
             List<Course> courses = courseRepository.findAll().stream()
                     .filter(c -> c.getLecturer() != null && c.getLecturer().getId().equals(lecturer.getId()))
@@ -133,40 +132,38 @@ public class LecturerController {
 
         try {
             if (courseId == null) {
-                return "redirect:/lecturer/assignment/create?error=Please select a valid course";
+                return "redirect:/lecturer/assignment/create?error=Please%20select%20a%20valid%20course";
             }
 
-            String username = principal.getName();
+            if (assignment.getLevel() == null || assignment.getLevel().trim().isEmpty()) {
+                return "redirect:/lecturer/assignment/create?error=Please%20select%20a%20level";
+            }
+
             User lecturer = userService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-            Course course = courseRepository.findById(courseId).orElse(null);
-            if (course == null) {
-                return "redirect:/lecturer/assignment/create?error=Invalid Course Selected";
-            }
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
-            // Validation: Ensure the lecturer is assigned to this course
             if (course.getLecturer() == null || !Objects.equals(course.getLecturer().getId(), lecturer.getId())) {
-                return "redirect:/lecturer/dashboard?error=You are not authorized to create assignments for this course.";
+                return "redirect:/lecturer/dashboard?error=Unauthorized";
             }
 
-            // Additional validation
             if (assignment.getTitle() == null || assignment.getTitle().trim().isEmpty()) {
-                return "redirect:/lecturer/assignment/create?error=Assignment title cannot be empty";
+                return "redirect:/lecturer/assignment/create?error=Assignment%20title%20cannot%20be%20empty";
             }
+            
             if (assignment.getDueDate() == null) {
-                return "redirect:/lecturer/assignment/create?error=Due date cannot be null";
+                return "redirect:/lecturer/assignment/create?error=Due%20date%20cannot%20be%20null";
             }
 
             assignment.setCreatedBy(lecturer);
             assignment.setDepartment(course.getDepartment());
             assignment.setCourse(course);
             
-            // Level is bound automatically from the form via @ModelAttribute
             assignmentService.createAssignment(assignment);
             return "redirect:/lecturer/dashboard?created";
         } catch (Exception e) {
-            // Log the error and redirect with error message
             System.err.println("Error creating assignment: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/lecturer/dashboard?error=" + e.getMessage();

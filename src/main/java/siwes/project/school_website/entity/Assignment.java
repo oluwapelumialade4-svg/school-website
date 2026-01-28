@@ -30,6 +30,10 @@ public class Assignment {
 
     private String level;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'PUBLISHED'")
+    private AssignmentStatus status = AssignmentStatus.PUBLISHED;
+
     @ManyToOne
     @JoinColumn(name = "created_by_id")
     private User createdBy;

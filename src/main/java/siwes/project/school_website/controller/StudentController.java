@@ -1,6 +1,7 @@
 package siwes.project.school_website.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 @Controller
 @RequestMapping("/student")
 @RequiredArgsConstructor
+@Slf4j
 public class StudentController {
 
     private final AssignmentRepository assignmentRepository;
@@ -54,11 +56,10 @@ public class StudentController {
         User student = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Debug Logging for Render
-        System.out.println("DEBUG: Student Dashboard Accessed");
-        System.out.println("DEBUG: Student: " + student.getUsername());
-        System.out.println("DEBUG: Department: " + (student.getDepartment() != null ? student.getDepartment().getName() : "N/A"));
-        System.out.println("DEBUG: Level: " + student.getLevel());
+        // Logging instead of System.out.println
+        log.info("Dashboard accessed by student: {}", student.getUsername());
+        log.debug("Department: {}", (student.getDepartment() != null ? student.getDepartment().getName() : "N/A"));
+        log.debug("Level: {}", student.getLevel());
 
         model.addAttribute("user", student);
         model.addAttribute("username", student.getFullName());
@@ -164,7 +165,11 @@ public class StudentController {
 
         if (file != null && !file.isEmpty()) {
             String filename = System.currentTimeMillis() + "_profile_" + file.getOriginalFilename();
-            Files.copy(file.getInputStream(), Paths.get("uploads").resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            Path uploadPath = Paths.get("uploads");
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
             user.setProfilePic(filename);
         }
 

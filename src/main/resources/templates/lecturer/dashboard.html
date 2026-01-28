@@ -74,10 +74,7 @@
 
                         <div class="mb-3 d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="me-2 fw-bold">Filter:</span>
-                                <a href="/lecturer/dashboard" class="btn btn-sm" th:classappend="${currentStatus == null} ? 'btn-primary' : 'btn-outline-secondary'">All</a>
-                                <a href="/lecturer/dashboard?status=DRAFT" class="btn btn-sm" th:classappend="${currentStatus == 'DRAFT'} ? 'btn-primary' : 'btn-outline-secondary'">Drafts</a>
-                                <a href="/lecturer/dashboard?status=PUBLISHED" class="btn btn-sm" th:classappend="${currentStatus == 'PUBLISHED'} ? 'btn-primary' : 'btn-outline-secondary'">Published</a>
+                                <!-- Status filters will be added later -->
                             </div>
                             <button type="submit" form="bulkDeleteForm" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete the selected assignments?')">Delete Selected</button>
                         </div>

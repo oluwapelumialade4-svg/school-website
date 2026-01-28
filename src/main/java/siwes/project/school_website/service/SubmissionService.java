@@ -68,14 +68,12 @@ public class SubmissionService {
         submissionRepository.save(submission);
     }
 
-    @SuppressWarnings("null")
     public List<Submission> getSubmissionsForAssignment(Long assignmentId) {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
         return submissionRepository.findByAssignment(assignment);
     }
 
-    @SuppressWarnings("null")
     public List<Submission> getSubmissionsForStudent(User student) {
         return submissionRepository.findByStudent(student);
     }
@@ -89,7 +87,6 @@ public class SubmissionService {
         submissionRepository.save(submission);
     }
 
-    @SuppressWarnings("null")
     public Submission getSubmissionById(Long id) {
         Submission result = submissionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
@@ -99,7 +96,6 @@ public class SubmissionService {
     public Resource loadFileAsResource(String filename) {
         try {
             Path file = rootLocation.resolve(filename);
-            @SuppressWarnings("null")
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
@@ -112,12 +108,9 @@ public class SubmissionService {
     }
 
     public Optional<Submission> getSubmission(Long id, String username) {
-        Assignment assignment = assignmentRepository.findById(id).orElse(null);
-        User student = userRepository.findByUsername(username).orElse(null);
-        if (assignment != null && student != null) {
-            return submissionRepository.findByStudentAndAssignment(student, assignment);
-        }
-        return Optional.empty();
+        return assignmentRepository.findById(id)
+                .flatMap(assignment -> userRepository.findByUsername(username)
+                        .flatMap(student -> submissionRepository.findByStudentAndAssignment(student, assignment)));
     }
 
     public Optional<Submission> getSubmissionByStudentAndAssignment(User student, Assignment assignment) {

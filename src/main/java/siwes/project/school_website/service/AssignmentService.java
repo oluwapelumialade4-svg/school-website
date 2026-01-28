@@ -17,12 +17,10 @@ public class AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
 
-    @SuppressWarnings("null")
     public List<Assignment> getAllAssignments() {
         return assignmentRepository.findAll();
     }
 
-    @SuppressWarnings("null")
     public List<Assignment> getAssignmentsByDepartment(Department department) {
         if (department == null) {
             throw new IllegalArgumentException("Department cannot be null");
@@ -30,7 +28,6 @@ public class AssignmentService {
         return assignmentRepository.findByCourse_Department(department);
     }
 
-    @SuppressWarnings("null")
     public List<Assignment> getAssignmentsByDepartmentAndLevel(Department department, String level) {
         if (department == null) {
             throw new IllegalArgumentException("Department cannot be null");

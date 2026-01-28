@@ -53,7 +53,6 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    @SuppressWarnings("null")
     public User getUserById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> 
             new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
