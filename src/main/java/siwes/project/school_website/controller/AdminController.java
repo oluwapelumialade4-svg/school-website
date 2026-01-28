@@ -215,7 +215,7 @@ public class AdminController {
     public String deleteDepartment(@PathVariable Long id) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Department ID cannot be null"));
         try {
-            departmentRepository.deleteById(safeId);
+            departmentRepository.deleteById(Objects.requireNonNull(safeId));
         } catch (Exception e) {
             return "redirect:/admin/departments?error=ConstraintViolation";
         }

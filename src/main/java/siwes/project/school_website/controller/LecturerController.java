@@ -141,12 +141,10 @@ public class LecturerController {
             User lecturer = userService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-            Course course = courseRepository.findById(courseId).orElse(null);
-            if (course == null) {
-                return "redirect:/lecturer/assignment/create?error=Invalid%20Course%20Selected";
-            }
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Course Selected"));
 
-            if (course.getLecturer() == null || !Objects.equals(course.getLecturer().getId(), lecturer.getId())) {
+            if (!Objects.equals(course.getLecturer().getId(), lecturer.getId())) {
                 return "redirect:/lecturer/dashboard?error=Unauthorized";
             }
 

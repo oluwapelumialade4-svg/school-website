@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,16 +51,16 @@ public class UserService {
     }
 
     public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+        return userRepository.findById(Objects.requireNonNull(id, "ID cannot be null"));
     }
 
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> 
+        return userRepository.findById(Objects.requireNonNull(id, "ID cannot be null")).orElseThrow(() -> 
             new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
     public User save(User user) {
-        return userRepository.save(user);
+        return userRepository.save(Objects.requireNonNull(user, "User cannot be null"));
     }
 
     public void updatePassword(User user, String password) {
@@ -111,7 +112,7 @@ public class UserService {
     public Resource loadProfilePic(String filename) {
         try {
             Path file = rootLocation.resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
+            Resource resource = new UrlResource(Objects.requireNonNull(file.toUri()));
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
@@ -171,7 +172,7 @@ public class UserService {
     }
 
     public Page<User> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable);
+        return userRepository.findAll(Objects.requireNonNull(pageable, "Pageable cannot be null"));
     }
 
     public Page<User> getUsersByRole(Role role, Pageable pageable) {

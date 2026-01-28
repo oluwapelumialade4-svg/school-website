@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -35,7 +36,7 @@ public class SubmissionService {
     private final Path rootLocation = Paths.get("uploads");
 
     public void submitAssignment(Long assignmentId, String username, MultipartFile file) throws IOException {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
+        Assignment assignment = assignmentRepository.findById(Objects.requireNonNull(assignmentId, "Assignment ID cannot be null"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
 
         User student = userRepository.findByUsername(username)
@@ -69,7 +70,7 @@ public class SubmissionService {
     }
 
     public List<Submission> getSubmissionsForAssignment(Long assignmentId) {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
+        Assignment assignment = assignmentRepository.findById(Objects.requireNonNull(assignmentId, "Assignment ID cannot be null"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
         return submissionRepository.findByAssignment(assignment);
     }
@@ -79,7 +80,7 @@ public class SubmissionService {
     }
 
     public void gradeSubmission(Long submissionId, Integer grade, String feedback) {
-        Submission submission = submissionRepository.findById(submissionId)
+        Submission submission = submissionRepository.findById(Objects.requireNonNull(submissionId, "Submission ID cannot be null"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
 
         submission.setGrade(grade);
@@ -88,7 +89,7 @@ public class SubmissionService {
     }
 
     public Submission getSubmissionById(Long id) {
-        Submission result = submissionRepository.findById(id)
+        Submission result = submissionRepository.findById(Objects.requireNonNull(id, "ID cannot be null"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
         return result;
     }
@@ -96,7 +97,7 @@ public class SubmissionService {
     public Resource loadFileAsResource(String filename) {
         try {
             Path file = rootLocation.resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
+            Resource resource = new UrlResource(Objects.requireNonNull(file.toUri()));
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
@@ -108,7 +109,7 @@ public class SubmissionService {
     }
 
     public Optional<Submission> getSubmission(Long id, String username) {
-        return assignmentRepository.findById(id)
+        return assignmentRepository.findById(Objects.requireNonNull(id, "ID cannot be null"))
                 .flatMap(assignment -> userRepository.findByUsername(username)
                         .flatMap(student -> submissionRepository.findByStudentAndAssignment(student, assignment)));
     }

@@ -24,6 +24,7 @@ import java.nio.file.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.Optional;
@@ -110,7 +111,7 @@ public class StudentController {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
         Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
-        Course course = courseRepository.findById(safeCourseId).orElseThrow();
+        Course course = courseRepository.findById(Objects.requireNonNull(safeCourseId)).orElseThrow();
 
         // Calculate current total credit units
         int currentUnits = student.getRegisteredCourses().stream()
@@ -134,7 +135,7 @@ public class StudentController {
         String username = principal.getName();
         User student = userRepository.findByUsername(username).orElseThrow();
         Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
-        Course course = courseRepository.findById(safeCourseId).orElseThrow();
+        Course course = courseRepository.findById(Objects.requireNonNull(safeCourseId)).orElseThrow();
 
         if (student.getRegisteredCourses().contains(course)) {
             student.getRegisteredCourses().remove(course);
@@ -179,7 +180,7 @@ public class StudentController {
     @GetMapping("/course/{id}/materials")
     public String viewCourseMaterials(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
-        Course course = courseRepository.findById(safeId).orElseThrow();
+        Course course = courseRepository.findById(Objects.requireNonNull(safeId)).orElseThrow();
         model.addAttribute("course", course);
         model.addAttribute("materials", courseMaterialRepository.findByCourse(course));
         return "student/course-materials";
@@ -188,7 +189,7 @@ public class StudentController {
     @GetMapping("/course/{id}/schedule")
     public String viewClassSchedule(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
-        Course course = courseRepository.findById(safeId).orElseThrow();
+        Course course = courseRepository.findById(Objects.requireNonNull(safeId)).orElseThrow();
         model.addAttribute("course", course);
         model.addAttribute("schedules", classScheduleRepository.findByCourse(course));
         return "student/class-schedule";
@@ -197,7 +198,7 @@ public class StudentController {
     @GetMapping("/course/{id}/forum")
     public String viewCourseForum(@PathVariable Long id, Model model) {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
-        Course course = courseRepository.findById(safeId).orElseThrow();
+        Course course = courseRepository.findById(Objects.requireNonNull(safeId)).orElseThrow();
         model.addAttribute("course", course);
         model.addAttribute("posts", forumPostRepository.findByCourseOrderByTimestampDesc(course));
         return "student/course-forum";
@@ -209,7 +210,7 @@ public class StudentController {
         User student = userRepository.findByUsername(username).orElseThrow();
 
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
-        Assignment assignment = assignmentRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
+        Assignment assignment = assignmentRepository.findById(Objects.requireNonNull(safeId)).orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
 
         // Check if assignment matches student's department and level
         if (student.getDepartment() == null || !student.getDepartment().equals(assignment.getDepartment()) || !assignment.getLevel().equals(student.getLevel())) {
@@ -234,7 +235,7 @@ public class StudentController {
         User student = userRepository.findByUsername(username).orElseThrow();
 
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
-        Assignment assignment = assignmentRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
+        Assignment assignment = assignmentRepository.findById(Objects.requireNonNull(safeId)).orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
 
         // Check access
         if (student.getDepartment() == null || !student.getDepartment().equals(assignment.getDepartment()) || !assignment.getLevel().equals(student.getLevel())) {
@@ -253,11 +254,9 @@ public class StudentController {
     @GetMapping("/material/{id}/download")
     public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id) throws IOException {
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Material ID cannot be null"));
-        // Assuming CourseMaterialRepository is injected, but it's not. Wait, in the code, it's courseMaterialRepository
-        // But in StudentController, it is injected.
-        var material = courseMaterialRepository.findById(safeId).orElseThrow(() -> new IllegalArgumentException("Material not found"));
+        var material = courseMaterialRepository.findById(Objects.requireNonNull(safeId)).orElseThrow(() -> new IllegalArgumentException("Material not found"));
         Path filePath = Paths.get("uploads").resolve(material.getFilePath());
-        Resource resource = new UrlResource(filePath.toUri());
+        Resource resource = new UrlResource(Objects.requireNonNull(filePath.toUri()));
         if (resource.exists() && resource.isReadable()) {
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFileName() + "\"")
