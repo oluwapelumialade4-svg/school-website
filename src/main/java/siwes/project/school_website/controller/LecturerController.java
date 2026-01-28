@@ -58,7 +58,6 @@ public class LecturerController {
     }
 
     @GetMapping("/lecturer/assignment/{id}/submissions")
-    @SuppressWarnings("null")
     public String viewSubmissions(@PathVariable Long id, Model model, Principal principal) {
         if (id == null) {
             throw new IllegalArgumentException("Assignment ID cannot be null");
@@ -142,8 +141,10 @@ public class LecturerController {
             User lecturer = userService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-            Course course = courseRepository.findById(courseId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+            Course course = courseRepository.findById(courseId).orElse(null);
+            if (course == null) {
+                return "redirect:/lecturer/assignment/create?error=Invalid%20Course%20Selected";
+            }
 
             if (course.getLecturer() == null || !Objects.equals(course.getLecturer().getId(), lecturer.getId())) {
                 return "redirect:/lecturer/dashboard?error=Unauthorized";
@@ -171,7 +172,6 @@ public class LecturerController {
     }
 
     @PostMapping("/lecturer/assignment/update")
-    @SuppressWarnings("null")
     public String updateAssignment(@RequestParam Long id,
                                    @ModelAttribute Assignment formData,
                                    @RequestParam(required = false) String action,
@@ -225,7 +225,6 @@ public class LecturerController {
     }
 
     @GetMapping("/lecturer/profile")
-    @SuppressWarnings("null")
     public String editProfile(Model model, Principal principal) {
         String username = principal.getName();
         User user = userService.findByUsername(username).orElseThrow();

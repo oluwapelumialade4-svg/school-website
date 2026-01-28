@@ -50,7 +50,6 @@ public class StudentController {
     private final SubmissionService submissionService;
 
     @GetMapping("/dashboard")
-    @SuppressWarnings("null")
     public String dashboard(Model model, Principal principal) {
         String username = principal.getName();
         User student = userRepository.findByUsername(username)
