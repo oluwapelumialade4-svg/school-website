@@ -11,6 +11,7 @@ import siwes.project.school_website.entity.Assignment;
 import siwes.project.school_website.entity.Submission;
 import siwes.project.school_website.entity.Course;
 import siwes.project.school_website.entity.User;
+import siwes.project.school_website.entity.AssignmentStatus;
 import siwes.project.school_website.repository.CourseRepository;
 import siwes.project.school_website.service.AssignmentService;
 import siwes.project.school_website.service.SubmissionService;
@@ -160,12 +161,24 @@ public class LecturerController {
             assignment.setDepartment(course.getDepartment());
             assignment.setCourse(course);
             
+            if ("draft".equalsIgnoreCase(action)) {
+                assignment.setStatus(AssignmentStatus.DRAFT);
+            } else {
+                assignment.setStatus(AssignmentStatus.PUBLISHED);
+            }
+
             assignmentService.createAssignment(assignment);
             return "redirect:/lecturer/dashboard?created";
         } catch (Exception e) {
             System.err.println("Error creating assignment: " + e.getMessage());
             e.printStackTrace();
-            return "redirect:/lecturer/dashboard?error=" + e.getMessage();
+            String errorMsg = e.getMessage();
+            if (errorMsg != null) {
+                // Sanitize error message to prevent URL header issues (newlines) which cause 500 errors
+                errorMsg = errorMsg.split("\n")[0];
+                if (errorMsg.length() > 100) errorMsg = errorMsg.substring(0, 100) + "...";
+            }
+            return "redirect:/lecturer/dashboard?error=" + errorMsg;
         }
     }
 
@@ -185,6 +198,10 @@ public class LecturerController {
         assignment.setTitle(formData.getTitle());
         assignment.setDescription(formData.getDescription());
         assignment.setDueDate(formData.getDueDate());
+
+        if ("publish".equalsIgnoreCase(action)) {
+            assignment.setStatus(AssignmentStatus.PUBLISHED);
+        }
 
         assignmentService.createAssignment(assignment); // Saves the updated entity
         return "redirect:/lecturer/dashboard?updated";
