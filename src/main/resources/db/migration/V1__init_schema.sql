@@ -43,6 +43,7 @@ CREATE TABLE assignment (
     description TEXT,
     due_date TIMESTAMP,
     level VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'PUBLISHED' NOT NULL,
     created_by_id BIGINT,
     department_id BIGINT,
     course_id BIGINT,

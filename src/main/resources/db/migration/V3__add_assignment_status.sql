@@ -1,2 +1,4 @@
 -- V3__add_assignment_status.sql
-ALTER TABLE assignment ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'PUBLISHED' NOT NULL;
+-- Status column is now included in V1 migration
+-- This migration is kept for backwards compatibility but does nothing
+-- SELECT 'Status column already exists in assignment table' AS message;
