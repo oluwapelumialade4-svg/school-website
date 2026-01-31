@@ -19,11 +19,9 @@ INSERT INTO assignment (id, title, description, created_by_id, department_id, co
 INSERT INTO assignment (id, title, description, created_by_id, department_id, course_id, level) VALUES (2, 'Spring Boot Portal', 'Complete the SIWES project dashboard', 102, 1, 2, '100L');
 
 -- Reset Sequences to avoid ID conflicts for future inserts
--- This ensures the next ID generated is greater than the max ID currently in the table
-SELECT setval(pg_get_serial_sequence('department', 'id'), (SELECT MAX(id) FROM department));
-SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
-SELECT setval(pg_get_serial_sequence('course', 'id'), (SELECT MAX(id) FROM course));
-SELECT setval(pg_get_serial_sequence('assignment', 'id'), (SELECT MAX(id) FROM assignment));
-
--- Note: If using H2 for testing, the syntax is slightly different: ALTER TABLE table_name ALTER COLUMN id RESTART WITH (SELECT MAX(id) + 1 FROM table_name);
--- The above syntax is for PostgreSQL.
+-- Use standard SQL syntax compatible with both H2 and PostgreSQL Identity columns
+-- Values are set to (MAX_ID + 1) based on the inserts above
+ALTER TABLE department ALTER COLUMN id RESTART WITH 3;
+ALTER TABLE users ALTER COLUMN id RESTART WITH 105;
+ALTER TABLE course ALTER COLUMN id RESTART WITH 3;
+ALTER TABLE assignment ALTER COLUMN id RESTART WITH 3;
