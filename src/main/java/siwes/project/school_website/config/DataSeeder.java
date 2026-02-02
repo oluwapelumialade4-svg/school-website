@@ -31,7 +31,7 @@ public class DataSeeder {
     @Value("${ADMIN_PASSWORD:admin123}")
     private String adminPassword;
 
-    @EventListener(ContextRefreshedEvent.class)
+    // @EventListener(ContextRefreshedEvent.class)
     public void initData() {
         // Ensure Admin exists
         if (userRepository.findByUsername("admin").isEmpty()) {
@@ -76,11 +76,11 @@ public class DataSeeder {
             lecturer.setLevel("100L"); // Lecturer handles 100L
             userRepository.save(lecturer);
         } else {
-            lecturer = userRepository.findByUsername("lecturer").get();
+            lecturer = userRepository.findByUsername("lecturer").orElse(null);
         }
 
         // Ensure Course exists and is assigned
-        if (courseRepository.count() == 0) {
+        if (courseRepository.count() == 0 && lecturer != null) {
             Course course = new Course();
             course.setName("Intro to Java");
             course.setCourseCode("CSC101");
