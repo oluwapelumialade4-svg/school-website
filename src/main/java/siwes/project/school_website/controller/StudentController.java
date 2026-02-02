@@ -52,7 +52,8 @@ public class StudentController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User student = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -74,7 +75,8 @@ public class StudentController {
         
         // Get submitted assignment IDs
         List<Long> submittedAssignmentIds = submissionService.getSubmissionsForStudent(student).stream()
-                .map(sub -> sub.getAssignment().getId())
+                .map(sub -> Optional.ofNullable(sub.getAssignment()).map(Assignment::getId).orElse(null))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         model.addAttribute("submittedAssignmentIds", submittedAssignmentIds);
         
@@ -86,7 +88,8 @@ public class StudentController {
 
     @GetMapping("/course/register")
     public String showCourseRegistration(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User student = userRepository.findByUsername(username).orElseThrow();
         
         if (student.getDepartment() == null) {
@@ -108,7 +111,8 @@ public class StudentController {
 
     @PostMapping("/course/register")
     public String registerCourse(@RequestParam Long courseId, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User student = userRepository.findByUsername(username).orElseThrow();
         Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(Objects.requireNonNull(safeCourseId)).orElseThrow();
@@ -132,7 +136,8 @@ public class StudentController {
 
     @PostMapping("/course/drop")
     public String dropCourse(@RequestParam Long courseId, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User student = userRepository.findByUsername(username).orElseThrow();
         Long safeCourseId = Optional.ofNullable(courseId).orElseThrow(() -> new IllegalArgumentException("Course ID cannot be null"));
         Course course = courseRepository.findById(Objects.requireNonNull(safeCourseId)).orElseThrow();
@@ -146,7 +151,8 @@ public class StudentController {
 
     @GetMapping("/profile")
     public String viewProfile(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User user = userRepository.findByUsername(username).orElseThrow();
         model.addAttribute("user", user);
         return "student/profile";
@@ -156,7 +162,8 @@ public class StudentController {
     public String updateProfile(@ModelAttribute User formData,
                                 @RequestParam(required = false) MultipartFile file,
                                 Principal principal) throws IOException {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User user = userRepository.findByUsername(username).orElseThrow();
 
         user.setFullName(formData.getFullName());
@@ -206,7 +213,8 @@ public class StudentController {
 
     @GetMapping("/assignment/{id}")
     public String viewAssignment(@PathVariable Long id, Model model, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User student = userRepository.findByUsername(username).orElseThrow();
 
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
@@ -231,7 +239,8 @@ public class StudentController {
 
     @PostMapping("/assignment/{id}/submit")
     public String submitAssignment(@PathVariable Long id, @RequestParam MultipartFile file, Principal principal) throws IOException {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User student = userRepository.findByUsername(username).orElseThrow();
 
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Assignment ID cannot be null"));
@@ -268,7 +277,8 @@ public class StudentController {
 
     @GetMapping("/submission/{id}/download")
     public ResponseEntity<Resource> downloadSubmission(@PathVariable Long id, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
 
         Long safeId = Optional.ofNullable(id).orElseThrow(() -> new IllegalArgumentException("Submission ID cannot be null"));
         Submission submission = submissionService.getSubmissionById(safeId);

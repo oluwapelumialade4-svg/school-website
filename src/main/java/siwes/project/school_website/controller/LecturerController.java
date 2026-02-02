@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import java.util.Objects;
+import java.util.Optional;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -39,7 +40,8 @@ public class LecturerController {
 
     @GetMapping("/lecturer/dashboard")
     public String dashboard(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User lecturer = userService.findByUsername(username).orElseThrow();
 
         // Get only assignments created by this lecturer
@@ -67,7 +69,7 @@ public class LecturerController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
         
         // Ownership Protection: Only the creator can view submissions
-        if (!assignment.getCreatedBy().getUsername().equals(principal.getName())) {
+        if (!assignment.getCreatedBy().getUsername().equals(Optional.ofNullable(principal).map(Principal::getName).orElse(""))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied: You did not create this assignment.");
         }
 
@@ -95,12 +97,17 @@ public class LecturerController {
 
         // Redirect back to the assignment's submission list
         Submission submission = submissionService.getSubmissionById(id);
-        return "redirect:/lecturer/assignment/" + submission.getAssignment().getId() + "/submissions?graded";
+        Long assignmentId = Optional.ofNullable(submission)
+                .map(Submission::getAssignment)
+                .map(Assignment::getId)
+                .orElseThrow(() -> new IllegalStateException("Submission or assignment not found"));
+        return "redirect:/lecturer/assignment/" + assignmentId + "/submissions?graded";
     }
 
     @GetMapping("/lecturer/assignment/create")
     public String createAssignmentForm(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User lecturer = userService.findByUsername(username).orElseThrow();
 
         List<Course> courses = courseRepository.findAll().stream()
@@ -119,7 +126,8 @@ public class LecturerController {
                                    @RequestParam(defaultValue = "publish") String action,
                                    Principal principal,
                                    Model model) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         
         if (bindingResult.hasErrors()) {
             User lecturer = userService.findByUsername(username).orElseThrow();
@@ -187,7 +195,8 @@ public class LecturerController {
                                    @ModelAttribute Assignment formData,
                                    @RequestParam(required = false) String action,
                                    Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         Assignment assignment = assignmentService.getAssignmentById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
 
@@ -241,7 +250,8 @@ public class LecturerController {
 
     @GetMapping("/lecturer/profile")
     public String editProfile(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User user = userService.findByUsername(username).orElseThrow();
         model.addAttribute("user", user);
         return "lecturer/profile";
@@ -253,7 +263,8 @@ public class LecturerController {
                                 @RequestParam String phoneNumber,
                                 @RequestParam(required = false) MultipartFile file,
                                 Principal principal) throws IOException {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User user = userService.findByUsername(username).orElseThrow();
         userService.updateLecturerProfile(user, fullName, email, phoneNumber, file);
         return "redirect:/lecturer/profile?success";

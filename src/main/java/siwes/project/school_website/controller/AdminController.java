@@ -225,7 +225,8 @@ public class AdminController {
     @GetMapping("/profile")
     @SuppressWarnings("null")
     public String editProfile(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User user = userService.findByUsername(username).orElseThrow();
         model.addAttribute("user", user);
         return "admin/profile";
@@ -239,7 +240,8 @@ public class AdminController {
                                 @RequestParam Integer age,
                                 @RequestParam(required = false) MultipartFile file,
                                 Principal principal) throws IOException {
-        String username = principal.getName();
+        String username = Optional.ofNullable(principal).map(Principal::getName)
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         User user = userService.findByUsername(username).orElseThrow();
 
         user.setFullName(fullName);
